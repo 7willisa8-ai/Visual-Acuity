@@ -217,6 +217,11 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         </div>
         <div class="avgrid" id="avgrid"></div>
       </div>
+      <div class="sec" id="letter-preview-sec">
+        <div class="sec-title">Lettres affichées au patient</div>
+        <div id="letter-preview" style="font-family:'Georgia',serif;font-size:28px;font-weight:400;letter-spacing:.25em;color:var(--accent);text-align:center;padding:8px 0;min-height:44px;word-break:break-all"></div>
+        <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:2px" id="av-sn-preview"></div>
+      </div>
       <div class="sec">
         <div class="sec-title">Lettres</div>
         <div class="g2">
@@ -392,6 +397,7 @@ function enterRemote(){
   document.getElementById('setup').classList.add('hidden');
   document.getElementById('remote').classList.add('show');
   buildAVGrid();
+  updatePreview();
   startPoll();
 }
 
@@ -429,6 +435,38 @@ const ROWS=[
   {av:1.5,sn:"20/13"},{av:2.0,sn:"20/10"},
 ];
 function fmtAV(v){return v<1?v.toFixed(2):v.toFixed(1)}
+
+/* Mirror of patient rndLetters — même algo, même seed = mêmes lettres */
+const LETTERS='CDEFHLNOPRSTZ';
+function rndLetters(count,seed){
+  let s=seed,arr=LETTERS.split(''),res=[];
+  for(let i=0;i<count;i++){
+    s=(s*1664525+1013904223)&0xffffffff;
+    const idx=Math.abs(s)%arr.length;
+    res.push(arr[idx]);
+    arr.splice(idx,1);
+    if(arr.length===0)arr=LETTERS.split('');
+  }
+  return res.join(' ');
+}
+
+function updatePreview(){
+  const el=document.getElementById('letter-preview');
+  const snEl=document.getElementById('av-sn-preview');
+  if(!el)return;
+  const r=ROWS[curRow];
+  // Count letters from original row data
+  const ROWLETTERS=['N O','E H','F P A','T O Z','L P E D','P E C F D','E D F C Z P','F E L O P Z D','D E F P O T E C','L E F O D P C T','F D P L T C E O','P E Z O L C F T D','D F E H O Z C T L P','F O Z P D E T L C H'];
+  const count=ROWLETTERS[curRow].split(' ').length;
+  const letters=rndLetters(count,curSeed+(curRow*31));
+  if(maskOn){
+    const arr=letters.split(' ');
+    el.textContent=arr.map((l,i)=>i%2===0?l:'_').join(' ');
+  } else {
+    el.textContent=letters;
+  }
+  snEl.textContent='AV '+fmtAV(r.av)+' · '+r.sn;
+}
 
 /* ═══ STATE ═══ */
 let curRow=10,curEye='OD',results={OD:null,OG:null};
@@ -477,21 +515,25 @@ function navigate(dir){
   document.getElementById('sn-disp').textContent=ROWS[curRow].sn;
   document.getElementById('ac'+curRow).scrollIntoView({block:'nearest',behavior:'smooth'});
   sendState({row:curRow,seed:curSeed,mask:maskOn,mode:curMode==='rg'?'rg':curMode==='picto'?'picto':'av'});
+  updatePreview();
 }
 function jumpTo(i){
   const pv=curRow;curRow=i;updCell(pv);updCell(curRow);
   document.getElementById('av-disp').textContent=fmtAV(ROWS[curRow].av);
   document.getElementById('sn-disp').textContent=ROWS[curRow].sn;
   sendState({row:curRow,seed:curSeed,mask:maskOn});
+  updatePreview();
 }
 function shuffle(){
   curSeed=Math.floor(Math.random()*999999);
   sendState({seed:curSeed,row:curRow,mask:maskOn});
+  updatePreview();
 }
 function toggleMask(){
   maskOn=!maskOn;
   document.getElementById('mask-btn').classList.toggle('active',maskOn);
   sendState({mask:maskOn,row:curRow,seed:curSeed});
+  updatePreview();
 }
 function setEye(e){
   curEye=e;
