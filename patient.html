@@ -66,12 +66,11 @@ body.dark #calib{background:#0d0d0d}
 .ctr-letters{font-family:var(--font-chart);letter-spacing:.3em;line-height:1;text-align:center;flex:1}
 
 /* ROUGE/VERT */
-#rg-wrap{display:none;width:100%;height:100%;position:relative}
-#rg-left{position:absolute;left:0;top:0;width:50%;height:100%;display:flex;align-items:center;justify-content:center}
-#rg-right{position:absolute;right:0;top:0;width:50%;height:100%;display:flex;align-items:center;justify-content:center}
-#rg-line{position:absolute;left:50%;top:0;bottom:0;width:2px;background:rgba(0,0,0,.1)}
-body.dark #rg-line{background:rgba(255,255,255,.1)}
-.rg-letter{font-family:var(--font-chart);letter-spacing:.2em;line-height:1;user-select:none}
+#rg-wrap{display:none;width:100%;height:100%;position:relative;overflow:hidden}
+#rg-left{position:absolute;left:0;top:0;width:50%;height:100%;background:#e53935;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.08em;padding:20px}
+#rg-right{position:absolute;right:0;top:0;width:50%;height:100%;background:#2e7d32;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.08em;padding:20px}
+#rg-oval{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none}
+.rg-num{font-family:-apple-system,'Helvetica Neue',sans-serif;font-weight:900;color:#000;letter-spacing:.15em;line-height:1.1;user-select:none;text-align:center}
 
 /* PICTOGRAMMES */
 #picto-wrap{display:none;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px}
@@ -114,9 +113,9 @@ body.dark #rg-line{background:rgba(255,255,255,.1)}
   <div id="pursuit-wrap"><canvas id="pursuit-cnv"></canvas></div>
   <div id="contrast-wrap"></div>
   <div id="rg-wrap">
-    <div id="rg-left"><span class="rg-letter" id="rg-left-txt"></span></div>
-    <div id="rg-line"></div>
-    <div id="rg-right"><span class="rg-letter" id="rg-right-txt"></span></div>
+    <div id="rg-left" id="rg-left"></div>
+    <div id="rg-oval"></div>
+    <div id="rg-right" id="rg-right"></div>
   </div>
   <div id="picto-wrap"></div>
   <div id="av-overlay"></div>
@@ -395,25 +394,37 @@ function renderRG(s){
   const row=s.row!==undefined?s.row:10;
   const r=ROWS[row];
   const seed=s.seed!==undefined?s.seed:curSeed;
-  const count=r.l.split(' ').length;
-  const half=Math.ceil(count/2);
-  const lettersL=rndLetters(half,seed+row*7);
-  const lettersR=rndLetters(half,seed+row*13+99);
-  const maxH=window.innerHeight*.70;
+  const maxH=window.innerHeight*.88;
   const hpx=Math.min(r.hpx*ppiScale,maxH);
-  document.getElementById('patient').style.background=darkMode?'#0d0d0d':'#fff';
-  // Left = rouge background
-  const leftEl=document.getElementById('rg-left');
-  leftEl.style.background=darkMode?'rgba(180,0,0,0.18)':'rgba(255,100,100,0.12)';
-  document.getElementById('rg-left-txt').style.fontSize=hpx+'px';
-  document.getElementById('rg-left-txt').style.color=darkMode?'#f0ece4':'#111';
-  document.getElementById('rg-left-txt').textContent=lettersL;
-  // Right = vert background
-  const rightEl=document.getElementById('rg-right');
-  rightEl.style.background=darkMode?'rgba(0,120,0,0.15)':'rgba(100,200,100,0.12)';
-  document.getElementById('rg-right-txt').style.fontSize=hpx+'px';
-  document.getElementById('rg-right-txt').style.color=darkMode?'#f0ece4':'#111';
-  document.getElementById('rg-right-txt').textContent=lettersR;
+  document.getElementById('patient').style.background='#000';
+
+  // Duochrome layout: 3 lignes de chiffres sur chaque fond
+  // Ligne 1: 2 chiffres | Ligne 2: 1 chiffre (gros) | Ligne 3: 3 chiffres
+  const NUMS=[['2','4'],['8'],['3','6','0']];
+  const NUMS2=[['4','2'],['8'],['0','6','3']];
+
+  function buildSide(el, sets, sz){
+    el.innerHTML='';
+    sets.forEach((row,ri)=>{
+      const line=document.createElement('div');
+      line.className='rg-num';
+      line.style.fontSize=(ri===1?sz*1.4:sz)+'px';
+      line.textContent=row.join('  ');
+      el.appendChild(line);
+    });
+  }
+
+  const sz=Math.max(hpx*0.7, 24);
+  buildSide(document.getElementById('rg-left'), NUMS, sz);
+  buildSide(document.getElementById('rg-right'), NUMS2, sz);
+
+  // Oval central chevauchant les deux fonds
+  const ovalW=sz*1.8, ovalH=sz*1.1;
+  document.getElementById('rg-oval').innerHTML=
+    '<svg width="'+Math.round(ovalW*2)+'" height="'+Math.round(ovalH*1.6)+'" viewBox="0 0 200 160">'+
+    '<ellipse cx="100" cy="80" rx="90" ry="60" fill="none" stroke="#000" stroke-width="10"/>'+
+    '<ellipse cx="100" cy="80" rx="55" ry="35" fill="#111" stroke="none"/>'+
+    '</svg>';
 }
 
 /* ═══ PICTOGRAMMES ═══ */
