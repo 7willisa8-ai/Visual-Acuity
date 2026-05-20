@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Parcours Visuel — Télécommande</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0d0d0d;--surface:#141414;--panel:#1c1c1c;--border:#2a2a2a;
+  --accent:#c8a96e;--text:#f0ece4;--text-muted:#888;--text-dim:#444;
+  --blue:#4a7fd4;--green:#3fa07a;--red:#d44a4a;
+}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;overflow:hidden}
+
+/* ── SETUP ── */
+#setup{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:28px;z-index:100;overflow-y:auto}
+#setup.hidden{display:none}
+.logo{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.setup-title{font-size:18px;font-weight:700;text-align:center}
+.setup-sub{font-size:12px;color:var(--text-muted);text-align:center;line-height:1.5;max-width:340px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;width:100%;max-width:380px}
+.card h3{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field label{font-size:11px;color:var(--text-muted);letter-spacing:.05em}
+.field input{padding:10px 14px;background:#111;border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;width:100%}
+.field input:focus{border-color:var(--accent)}
+.field input::placeholder{color:#444}
+.connect-btn{width:100%;padding:12px;background:var(--accent);color:#0d0d0d;font-size:13px;font-weight:700;border:none;border-radius:8px;cursor:pointer;letter-spacing:.05em}
+#st{font-size:11px;color:var(--text-dim);text-align:center;margin-top:8px;min-height:16px}
+#st.ok{color:var(--green)}.#st.err{color:var(--red)}
+
+/* ── CALIB PANEL ── */
+#calib-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;width:100%;max-width:380px}
+#calib-panel h3{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.calib-info{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:12px}
+.calib-row{display:flex;gap:8px;align-items:center}
+.calib-row input{flex:1;padding:9px 12px;background:#111;border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;text-align:center;outline:none}
+.calib-row input:focus{border-color:var(--accent)}
+.calib-btn{padding:9px 16px;background:var(--panel);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap}
+.calib-btn.ok{background:rgba(63,160,122,.2);border-color:var(--green);color:var(--green)}
+#calib-result{font-size:11px;color:var(--text-dim);margin-top:8px;text-align:center;min-height:14px}
+
+/* ── MAIN REMOTE ── */
+#remote{display:none;flex-direction:column;height:100vh;overflow:hidden}
+#remote.show{display:flex}
+
+/* TOPBAR */
+#topbar{display:flex;align-items:center;gap:6px;padding:0 12px;height:50px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
+.logo-sm{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);white-space:nowrap;margin-right:4px}
+.mode-tabs{display:flex;gap:2px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:2px;flex-shrink:0}
+.mtab{font-size:11px;padding:4px 10px;border-radius:5px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;white-space:nowrap;letter-spacing:.03em}
+.mtab.active{background:var(--border);color:var(--text)}
+.bg-sw{display:flex;border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-left:auto;flex-shrink:0}
+.bg-sw button{padding:4px 10px;font-size:11px;font-weight:700;border:none;background:transparent;color:var(--text-dim);cursor:pointer}
+.bg-sw button.active{background:var(--border);color:var(--text)}
+#conn-led{width:8px;height:8px;border-radius:50%;background:#333;flex-shrink:0;transition:background .3s}
+#conn-led.on{background:var(--green)}
+#conn-led.err{background:var(--red)}
+
+/* BODY */
+#remote-body{flex:1;overflow-y:auto;padding:12px}
+
+/* RESULT PILLS */
+#av-results{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.av-res-pill{flex:1;min-width:120px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.av-res-pill .eye-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim)}
+.av-res-pill .eye-val{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.av-res-pill.od .eye-val{color:var(--blue)}
+.av-res-pill.og .eye-val{color:var(--green)}
+.av-res-pill .eye-val.empty{color:var(--text-dim);font-size:18px}
+
+/* EYE + RESET */
+.eye-row{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+.eye-btn{flex:1;padding:10px;font-size:13px;font-weight:700;letter-spacing:.06em;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-muted);cursor:pointer;transition:all .2s;text-align:center}
+.eye-btn.od{background:rgba(74,127,212,.18);border-color:var(--blue);color:var(--blue)}
+.eye-btn.og{background:rgba(63,160,122,.18);border-color:var(--green);color:var(--green)}
+.reset-btn{padding:10px 14px;font-size:12px;color:var(--text-dim);background:transparent;border:1px solid var(--border);border-radius:10px;cursor:pointer}
+
+/* AV PANEL */
+#av-panel{}
+.av-nav{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.big-nav{flex:1;padding:18px;font-size:22px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text-muted);cursor:pointer;text-align:center;transition:all .15s;font-weight:300}
+.big-nav:active{background:var(--panel);transform:scale(.97)}
+.av-current{flex:1;text-align:center}
+.av-current .av-big{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent);line-height:1}
+.av-current .av-sn{font-size:11px;color:var(--text-dim);letter-spacing:.06em;margin-top:2px}
+.lock-row{display:flex;gap:8px;margin-bottom:10px}
+.lock-btn{flex:1;padding:12px;font-size:12px;font-weight:700;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-muted);cursor:pointer;text-align:center;transition:all .2s;letter-spacing:.04em}
+.lock-btn.locked-od{background:rgba(74,127,212,.18);border-color:var(--blue);color:var(--blue)}
+.lock-btn.locked-og{background:rgba(63,160,122,.18);border-color:var(--green);color:var(--green)}
+.lock-btn:active{transform:scale(.97)}
+.av-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.av-cell{padding:10px 4px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s}
+.av-cell:active{transform:scale(.95)}
+.av-cell.active-row{border-color:var(--accent);background:rgba(200,169,110,.1)}
+.av-cell.locked-od{border-color:var(--blue)}
+.av-cell.locked-og{border-color:var(--green)}
+.av-cell.locked-both{border-color:var(--accent)}
+.av-cell .cn{font-size:13px;font-weight:700;color:var(--text)}
+.av-cell .cs{font-size:9px;color:var(--text-dim);margin-top:1px}
+.av-cell .cdots{display:flex;justify-content:center;gap:3px;margin-top:4px}
+.cdot{width:5px;height:5px;border-radius:50%;background:var(--border)}
+.cdot.od{background:var(--blue)}.cdot.og{background:var(--green)}
+
+/* SECTIONS */
+.section{margin-bottom:14px}
+.section-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ctrl-btn{padding:11px 10px;font-size:12px;font-weight:600;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-muted);cursor:pointer;text-align:center;transition:all .15s;letter-spacing:.03em}
+.ctrl-btn.active{background:rgba(200,169,110,.15);border-color:var(--accent);color:var(--accent)}
+.ctrl-btn:active{transform:scale(.96)}
+.ctrl-btn.danger{border-color:var(--red);color:var(--red);background:rgba(212,74,74,.1)}
+.ctrl-btn.success{border-color:var(--green);color:var(--green);background:rgba(63,160,122,.1)}
+.ctrl-btn.primary{border-color:var(--accent);color:var(--accent);background:rgba(200,169,110,.1)}
+
+/* Worth answers */
+.w-grid{display:grid;grid-template-columns:1fr;gap:5px}
+.w-ans{padding:11px 14px;font-size:12px;font-weight:600;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-muted);cursor:pointer;transition:all .15s}
+.w-ans.active{background:rgba(200,169,110,.15);border-color:var(--accent);color:var(--text)}
+.w-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;font-weight:700}
+.w-tag.normal{background:rgba(63,160,122,.2);color:var(--green)}
+.w-tag.alert{background:rgba(212,74,74,.2);color:var(--red)}
+
+/* Timer */
+#timer-display{font-size:48px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent);text-align:center;letter-spacing:-.02em;margin:8px 0}
+
+/* Pursuit speed display */
+#spd-info{font-size:11px;color:var(--text-dim);text-align:center;margin-top:6px;letter-spacing:.05em}
+
+/* Calib result */
+#calib-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(200,169,110,.15);border:1px solid rgba(200,169,110,.3);color:var(--accent);letter-spacing:.06em}
+
+/* Hidden panels */
+.mode-panel{display:none}
+.mode-panel.active{display:block}
+
+/* send indicator */
+#send-flash{position:fixed;top:50px;right:10px;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:0;transition:opacity .1s;pointer-events:none}
+#send-flash.flash{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- SEND FLASH -->
+<div id="send-flash"></div>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="logo">Parcours Visuel</div>
+  <div class="setup-title">Télécommande iPhone</div>
+  <div class="setup-sub">Entrez la même URL Firebase que sur l'écran patient</div>
+
+  <div class="card">
+    <h3>URL Firebase</h3>
+    <div class="field">
+      <label>URL Realtime Database</label>
+      <input type="text" id="fb-url" placeholder="https://mon-projet-default-rtdb.europe-west1.firebasedatabase.app" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="url">
+    </div>
+    <button class="connect-btn" onclick="connect()">Connecter</button>
+    <div id="st">En attente</div>
+  </div>
+
+  <div id="calib-panel" class="card" style="display:none">
+    <h3>Calibration écran TV</h3>
+    <div class="calib-info">Sur l'écran patient, une barre de <strong>200 px</strong> est affichée. Mesurez-la en mm avec un mètre, puis entrez la valeur :</div>
+    <div class="calib-row">
+      <input type="number" id="ruler-mm" placeholder="ex: 87" inputmode="decimal">
+      <button class="calib-btn" onclick="calibrate()">Calibrer</button>
+    </div>
+    <div id="calib-result"></div>
+    <br>
+    <button class="connect-btn" onclick="enterRemote()">Continuer →</button>
+  </div>
+</div>
+
+<!-- REMOTE -->
+<div id="remote">
+  <div id="topbar">
+    <span class="logo-sm">PV Remote</span>
+    <div class="mode-tabs">
+      <button class="mtab active" onclick="setMode('av')">Acuité</button>
+      <button class="mtab" onclick="setMode('worth')">Worth</button>
+      <button class="mtab" onclick="setMode('fix')">Fixation</button>
+      <button class="mtab" onclick="setMode('pursuit')">Poursuite</button>
+      <button class="mtab" onclick="setMode('contrast')">Contraste</button>
+    </div>
+    <div class="bg-sw">
+      <button id="bg-w" onclick="setBg(false)">☀</button>
+      <button id="bg-d" class="active" onclick="setBg(true)">☾</button>
+    </div>
+    <div id="conn-led"></div>
+  </div>
+
+  <div id="remote-body">
+
+    <!-- AV RESULTS -->
+    <div id="av-results">
+      <div class="av-res-pill od">
+        <span class="eye-lbl">OD</span>
+        <span class="av-val od empty" id="r-od">—</span>
+      </div>
+      <div class="av-res-pill og">
+        <span class="eye-lbl">OG</span>
+        <span class="av-val og empty" id="r-og">—</span>
+      </div>
+    </div>
+
+    <!-- EYE + RESET -->
+    <div class="eye-row">
+      <button class="eye-btn od" id="btn-od" onclick="setEye('OD')">OD</button>
+      <button class="eye-btn" id="btn-og" onclick="setEye('OG')">OG</button>
+      <button class="reset-btn" onclick="resetAll()">Reset</button>
+    </div>
+
+    <!-- ── MODE PANELS ── -->
+
+    <!-- AV -->
+    <div class="mode-panel active" id="mp-av">
+      <div class="av-nav">
+        <button class="big-nav" onclick="navigate(-1)">↑</button>
+        <div class="av-current">
+          <div class="av-big" id="av-display">1.0</div>
+          <div class="av-sn" id="sn-display">20/20</div>
+        </div>
+        <button class="big-nav" onclick="navigate(1)">↓</button>
+      </div>
+      <div class="lock-row">
+        <button class="lock-btn" id="l-od" onclick="lockEye('OD')">Valider OD</button>
+        <button class="lock-btn" id="l-og" onclick="lockEye('OG')">Valider OG</button>
+      </div>
+      <div class="av-grid" id="av-grid"></div>
+    </div>
+
+    <!-- WORTH -->
+    <div class="mode-panel" id="mp-worth">
+      <div class="section">
+        <div class="section-title">Réponse du patient</div>
+        <div class="w-grid">
+          <button class="w-ans" onclick="worthAns('VN',this)"><span class="w-tag normal">✓</span>Vision normale — 4 lumières</button>
+          <button class="w-ans" onclick="worthAns('NV',this)"><span class="w-tag alert">!</span>Neutralisation OG — rouge seul (OD)</button>
+          <button class="w-ans" onclick="worthAns('NO',this)"><span class="w-tag alert">!</span>Neutralisation OD — vert seul (OG)</button>
+          <button class="w-ans" onclick="worthAns('DP',this)"><span class="w-tag alert">!</span>Diplopie — déviation binoculaire</button>
+          <button class="w-ans" onclick="worthAns('CF',this)"><span class="w-tag alert">!</span>Confusion — superposition anormale</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIXATION -->
+    <div class="mode-panel" id="mp-fix">
+      <div class="section">
+        <div class="section-title">Type de cible</div>
+        <div class="btn-grid">
+          <button class="ctrl-btn active" onclick="setFix('target','cross',this)">Croix de Maddox</button>
+          <button class="ctrl-btn" onclick="setFix('target','letter',this)">Lettre E</button>
+          <button class="ctrl-btn" onclick="setFix('target','dot',this)">Point</button>
+          <button class="ctrl-btn" onclick="setFix('target','ring',this)">Anneau</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Taille (angle visuel)</div>
+        <div class="btn-grid">
+          <button class="ctrl-btn active" onclick="setFix('size','sm',this)">Fine — 6'</button>
+          <button class="ctrl-btn" onclick="setFix('size','md',this)">Moyenne — 12'</button>
+          <button class="ctrl-btn" onclick="setFix('size','lg',this)" style="grid-column:span 2">Large — 30'</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Chronomètre cover test</div>
+        <div id="timer-display">0.0</div>
+        <div class="btn-grid">
+          <button class="ctrl-btn primary" id="timer-btn" onclick="toggleTimer()">▶ Démarrer</button>
+          <button class="ctrl-btn" onclick="resetTimer()">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PURSUIT -->
+    <div class="mode-panel" id="mp-pursuit">
+      <div class="section">
+        <div class="section-title">Trajectoire</div>
+        <div class="btn-grid">
+          <button class="ctrl-btn active" onclick="setPursuit('type','h',this)">Horizontale</button>
+          <button class="ctrl-btn" onclick="setPursuit('type','v',this)">Verticale</button>
+          <button class="ctrl-btn" onclick="setPursuit('type','circle',this)">Circulaire</button>
+          <button class="ctrl-btn" onclick="setPursuit('type','h8',this)">Figure 8</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Vitesse angulaire</div>
+        <div class="btn-grid">
+          <button class="ctrl-btn active" id="sp-0" onclick="setPursuit('speed',272,this)">Lente — 0.5°/s</button>
+          <button class="ctrl-btn" id="sp-1" onclick="setPursuit('speed',544,this)">Douce — 1°/s</button>
+          <button class="ctrl-btn" id="sp-2" onclick="setPursuit('speed',1089,this)" style="grid-column:span 2">Rapide — 2°/s</button>
+        </div>
+        <div id="spd-info">Traverse l'écran en ~8 s</div>
+      </div>
+      <div class="section">
+        <div class="btn-grid">
+          <button class="ctrl-btn primary" id="pursuit-btn" onclick="togglePursuit()">▶ Démarrer</button>
+          <button class="ctrl-btn" onclick="stopPursuit()">■ Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTRAST -->
+    <div class="mode-panel" id="mp-contrast">
+      <div class="section">
+        <div class="section-title">Affichage contraste</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6">
+          L'écran patient affiche 5 rangées de lettres (AV 0.8) avec des contrastes de 100% à 6%.<br>
+          Demander au patient de nommer les lettres de haut en bas.
+        </div>
+        <br>
+        <div class="btn-grid">
+          <div style="padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text-muted);text-align:center">
+            <div style="font-size:18px;font-weight:700;color:var(--text)">H Z S</div>
+            <div style="font-size:9px;letter-spacing:.08em;margin-top:2px">100%</div>
+          </div>
+          <div style="padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;color:#666;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:#888">C Z S</div>
+            <div style="font-size:9px;letter-spacing:.08em;margin-top:2px;color:var(--text-dim)">50%</div>
+          </div>
+          <div style="padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;color:#444;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:#555">Z R N</div>
+            <div style="font-size:9px;letter-spacing:.08em;margin-top:2px;color:var(--text-dim)">25%</div>
+          </div>
+          <div style="padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;color:#333;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:#3a3a3a">S D C</div>
+            <div style="font-size:9px;letter-spacing:.08em;margin-top:2px;color:var(--text-dim)">12%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /remote-body -->
+</div><!-- /remote -->
+
+<script>
+/* ═══════════════════════════════
+   FIREBASE
+═══════════════════════════════ */
+let FB_URL='';
+let sendQueue={};
+let sendTimer=null;
+let ppiScale=1.0;
+const SEND_DELAY=80;
+
+function connect(){
+  let url=document.getElementById("fb-url").value.trim();
+  url=url.replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\/+$/,"").trim();
+  if(url&&!url.startsWith("http"))url="https://"+url;
+  if(!url){setSt("Entrer l URL Firebase","");return;}
+  FB_URL=url;
+  setSt("Connexion en cours…","");
+  document.getElementById("fb-url").value=url;
+  fetch(FB_URL+"/ping.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:Date.now()})})
+    .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
+    .then(()=>{
+      setSt("Connecté ✓","ok");
+      try{localStorage.setItem("pv_fb_url",FB_URL);}catch(e){}
+      document.getElementById("calib-panel").style.display="block";
+      document.getElementById("conn-led").className="on";
+    })
+    .catch(err=>{
+      setSt("Échec : "+err.message+" — vérifier URL et règles Firebase","err");
+      document.getElementById("conn-led").className="err";
+      console.error("FB error:",err,FB_URL);
+    });
+}
+function setSt(msg,cls){const el=document.getElementById('st');el.textContent=msg;el.className=cls;}
+
+function calibrate(){
+  const mm=parseFloat(document.getElementById('ruler-mm').value);
+  if(!mm||mm<10||mm>500){document.getElementById('calib-result').textContent='Valeur invalide';return;}
+  // 200px sur l'écran patient = mm mm physiques
+  // PPI TV = 200 / (mm/25.4) = 200*25.4/mm
+  const ppi_tv=200*25.4/mm;
+  ppiScale=ppi_tv/264; // ratio par rapport à l'iPad Pro base
+  document.getElementById('calib-result').innerHTML=`PPI TV détecté : <strong>${ppi_tv.toFixed(1)}</strong> · Facteur : ${ppiScale.toFixed(3)}`;
+  document.querySelector('.calib-btn').className='calib-btn ok';
+  // Send scale to patient
+  sendState({ppi_scale:ppiScale});
+}
+
+function enterRemote(){
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('remote').classList.add('show');
+  buildAVGrid();
+  startPoll();
+}
+
+/* ═══════════════════════════════
+   STATE SEND (batched)
+═══════════════════════════════ */
+function sendState(patch){
+  Object.assign(sendQueue,patch);
+  if(sendTimer)clearTimeout(sendTimer);
+  sendTimer=setTimeout(flushState,SEND_DELAY);
+}
+function flushState(){
+  if(!FB_URL)return;
+  const payload=JSON.stringify(sendQueue);
+  sendQueue={};
+  fetch(FB_URL+'/state.json',{method:'PATCH',body:payload})
+    .then(()=>{flash();document.getElementById('conn-led').className='on';})
+    .catch(()=>{document.getElementById('conn-led').className='err';});
+}
+function flash(){
+  const el=document.getElementById('send-flash');
+  el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),150);
+}
+
+/* Poll to confirm connection */
+function startPoll(){
+  setInterval(()=>{
+    if(!FB_URL)return;
+    fetch(FB_URL+'/ping.json',{method:'PUT',body:JSON.stringify({t:Date.now()})})
+      .then(()=>document.getElementById('conn-led').className='on')
+      .catch(()=>document.getElementById('conn-led').className='err');
+  },5000);
+}
+
+/* ═══════════════════════════════
+   DATA
+═══════════════════════════════ */
+const ROWS=[
+  {av:.05,sn:"20/400"},{av:.1,sn:"20/200"},{av:.2,sn:"20/100"},
+  {av:.3,sn:"20/67"},{av:.4,sn:"20/50"},{av:.5,sn:"20/40"},
+  {av:.6,sn:"20/33"},{av:.7,sn:"20/29"},{av:.8,sn:"20/25"},
+  {av:.9,sn:"20/22"},{av:1.0,sn:"20/20"},{av:1.2,sn:"20/17"},
+  {av:1.5,sn:"20/13"},{av:2.0,sn:"20/10"},
+];
+function fmtAV(v){return v<1?v.toFixed(2):v.toFixed(1)}
+
+/* ═══════════════════════════════
+   STATE
+═══════════════════════════════ */
+let curRow=10,curEye='OD',results={OD:null,OG:null};
+let curMode='av',darkMode=false;
+let pRunning=false;
+let timerRunning=false,timerVal=0,timerInt=null;
+let pursuitSpeed=272;
+
+/* ═══════════════════════════════
+   MODE
+═══════════════════════════════ */
+function setMode(m){
+  curMode=m;
+  document.querySelectorAll('.mtab').forEach((b,i)=>{
+    b.classList.toggle('active',['av','worth','fix','pursuit','contrast'][i]===m);
+  });
+  document.querySelectorAll('.mode-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('mp-'+m).classList.add('active');
+  sendState({mode:m});
+}
+
+/* ═══════════════════════════════
+   BG
+═══════════════════════════════ */
+function setBg(dark){
+  darkMode=dark;
+  document.getElementById('bg-w').classList.toggle('active',!dark);
+  document.getElementById('bg-d').classList.toggle('active',dark);
+  sendState({dark:dark});
+}
+
+/* ═══════════════════════════════
+   AV
+═══════════════════════════════ */
+function buildAVGrid(){
+  const grid=document.getElementById('av-grid');grid.innerHTML='';
+  ROWS.forEach((r,i)=>{
+    const cell=document.createElement('div');
+    cell.className='av-cell'+(i===curRow?' active-row':'');
+    cell.id='ac'+i;cell.onclick=()=>jumpTo(i);
+    cell.innerHTML=`<div class="cn">${fmtAV(r.av)}</div><div class="cs">${r.sn}</div><div class="cdots"><div class="cdot${results.OD===r.av?' od':''}"></div><div class="cdot${results.OG===r.av?' og':''}"></div></div>`;
+    grid.appendChild(cell);
+  });
+}
+function updCell(i){
+  const c=document.getElementById('ac'+i);if(!c)return;
+  c.className='av-cell'+(i===curRow?' active-row':'');
+  c.querySelector('.cdots').innerHTML=`<div class="cdot${results.OD===ROWS[i].av?' od':''}"></div><div class="cdot${results.OG===ROWS[i].av?' og':''}"></div>`;
+}
+function navigate(dir){
+  const nx=curRow+dir;if(nx<0||nx>=ROWS.length)return;
+  const pv=curRow;curRow=nx;updCell(pv);updCell(curRow);
+  const r=ROWS[curRow];
+  document.getElementById('av-display').textContent=fmtAV(r.av);
+  document.getElementById('sn-display').textContent=r.sn;
+  document.getElementById('ac'+curRow).scrollIntoView({block:'nearest',behavior:'smooth'});
+  sendState({row:curRow});
+}
+function jumpTo(i){
+  const pv=curRow;curRow=i;updCell(pv);updCell(curRow);
+  const r=ROWS[curRow];
+  document.getElementById('av-display').textContent=fmtAV(r.av);
+  document.getElementById('sn-display').textContent=r.sn;
+  sendState({row:curRow});
+}
+function setEye(e){
+  curEye=e;
+  document.getElementById('btn-od').className='eye-btn'+(e==='OD'?' od':'');
+  document.getElementById('btn-og').className='eye-btn'+(e==='OG'?' og':'');
+}
+function lockEye(e){
+  const av=ROWS[curRow].av;results[e]=av;
+  updCell(curRow);
+  const el=document.getElementById('r-'+e.toLowerCase());
+  el.textContent=fmtAV(av);el.className='av-val '+(e==='OD'?'od':'og');
+  const btn=document.getElementById('l-'+e.toLowerCase());
+  btn.className='lock-btn locked-'+e.toLowerCase();
+  btn.textContent=e+' : '+fmtAV(av)+' ✓';
+  if(e==='OD'&&results.OG===null)setEye('OG');
+  else if(e==='OG'&&results.OD===null)setEye('OD');
+}
+function resetAll(){
+  results={OD:null,OG:null};
+  ['od','og'].forEach(e=>{
+    const el=document.getElementById('r-'+e);el.textContent='—';el.className='av-val '+e+' empty';
+    const b=document.getElementById('l-'+e);b.className='lock-btn';b.textContent='Valider '+e.toUpperCase();
+  });
+  ROWS.forEach((_,i)=>updCell(i));
+  clearInterval(timerInt);timerRunning=false;timerVal=0;
+  document.getElementById('timer-display').textContent='0.0';
+  document.getElementById('timer-btn').textContent='▶ Démarrer';
+}
+
+/* ═══════════════════════════════
+   WORTH
+═══════════════════════════════ */
+function worthAns(code,btn){
+  document.querySelectorAll('.w-ans').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  sendState({worth_answer:code});
+}
+
+/* ═══════════════════════════════
+   FIXATION
+═══════════════════════════════ */
+function setFix(key,val,btn){
+  const group=key==='target'?'target':'size';
+  btn.closest('.btn-grid').querySelectorAll('.ctrl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const patch={};patch['fix_'+key]=val;
+  sendState(patch);
+}
+function toggleTimer(){
+  if(timerRunning){
+    clearInterval(timerInt);timerRunning=false;
+    document.getElementById('timer-btn').textContent='▶ Démarrer';
+  }else{
+    timerVal=0;timerRunning=true;
+    document.getElementById('timer-display').textContent='0.0';
+    document.getElementById('timer-btn').textContent='■ Stop';
+    timerInt=setInterval(()=>{
+      timerVal+=0.1;
+      document.getElementById('timer-display').textContent=timerVal.toFixed(1);
+    },100);
+  }
+}
+function resetTimer(){
+  clearInterval(timerInt);timerRunning=false;timerVal=0;
+  document.getElementById('timer-display').textContent='0.0';
+  document.getElementById('timer-btn').textContent='▶ Démarrer';
+}
+
+/* ═══════════════════════════════
+   PURSUIT
+═══════════════════════════════ */
+const SPD_LABELS={272:'~8 s',544:'~4 s',1089:'~2 s'};
+function setPursuit(key,val,btn){
+  btn.closest('.btn-grid').querySelectorAll('.ctrl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(key==='speed'){
+    pursuitSpeed=val;
+    document.getElementById('spd-info').textContent='Traverse l\'écran en '+SPD_LABELS[val];
+  }
+  const patch={};patch['pursuit_'+key]=val;
+  sendState(patch);
+}
+function togglePursuit(){
+  pRunning=!pRunning;
+  document.getElementById('pursuit-btn').textContent=pRunning?'■ Stop':'▶ Démarrer';
+  sendState({pursuit_running:pRunning,pursuit_speed:pursuitSpeed});
+}
+function stopPursuit(){
+  pRunning=false;
+  document.getElementById('pursuit-btn').textContent='▶ Démarrer';
+  sendState({pursuit_running:false});
+}
+
+/* ═══════════════════════════════
+   RESTORE URL
+═══════════════════════════════ */
+try{const s=localStorage.getItem('pv_fb_url');if(s)document.getElementById('fb-url').value=s;}catch(e){}
+</script>
+</body>
+</html>
