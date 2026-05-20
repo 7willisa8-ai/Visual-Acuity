@@ -8,237 +8,177 @@
 <title>Parcours Visuel — Écran Patient</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --test-bg:#ffffff;--test-fg:#111111;
-  --font-chart:'Georgia','Times New Roman',serif;
-}
-body.dark{--test-bg:#0d0d0d;--test-fg:#f0ece4;}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--test-bg);transition:background .25s}
-body,input,button{font-family:-apple-system,'Helvetica Neue',sans-serif}
+:root{--font-chart:'Georgia','Times New Roman',serif;}
+html,body{width:100%;height:100%;overflow:hidden;background:#ffffff;transition:background .25s}
+body.dark{background:#0d0d0d}
 
-/* ── SETUP SCREEN ── */
-#setup{
-  position:fixed;inset:0;background:#0d0d0d;color:#f0ece4;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
-  padding:40px;z-index:100;
-}
+/* SETUP */
+#setup{position:fixed;inset:0;background:#0d0d0d;color:#f0ece4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px;z-index:100;overflow-y:auto}
 #setup.hidden{display:none}
-.setup-logo{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#c8a96e;margin-bottom:8px}
-.setup-title{font-size:20px;font-weight:700;color:#f0ece4;text-align:center}
-.setup-sub{font-size:13px;color:#888;text-align:center;line-height:1.6;max-width:480px}
-.setup-card{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:14px;padding:24px 28px;max-width:520px;width:100%;text-align:left}
-.setup-card h3{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c8a96e;margin-bottom:14px}
-.step{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;font-size:13px;color:#aaa;line-height:1.5}
-.step-n{width:22px;height:22px;border-radius:50%;background:#c8a96e;color:#0d0d0d;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.step code{background:#111;border:1px solid #333;border-radius:4px;padding:1px 6px;font-size:11px;color:#c8a96e;font-family:monospace}
-.field-row{display:flex;gap:8px;margin-top:14px}
-.field-row input{flex:1;padding:10px 14px;background:#111;border:1px solid #333;border-radius:8px;color:#f0ece4;font-size:13px;outline:none}
-.field-row input:focus{border-color:#c8a96e}
-.field-row input::placeholder{color:#555}
-.connect-btn{padding:10px 24px;background:#c8a96e;color:#0d0d0d;font-size:13px;font-weight:700;border:none;border-radius:8px;cursor:pointer;white-space:nowrap}
-#status-dot{width:10px;height:10px;border-radius:50%;background:#444;display:inline-block;margin-right:8px;transition:background .3s}
-#status-dot.connected{background:#3fa07a}
-#status-dot.error{background:#d44a4a}
-#conn-status{font-size:12px;color:#666;display:flex;align-items:center;margin-top:10px}
-.skip-btn{font-size:12px;color:#555;background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:4px}
+.s-logo{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#c8a96e}
+.s-title{font-size:18px;font-weight:700;text-align:center}
+.s-card{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:14px;padding:22px 26px;max-width:500px;width:100%}
+.s-card h3{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c8a96e;margin-bottom:12px}
+.step{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:12px;color:#aaa;line-height:1.5}
+.sn{width:20px;height:20px;border-radius:50%;background:#c8a96e;color:#0d0d0d;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.s-card code{background:#111;border:1px solid #333;border-radius:4px;padding:1px 5px;font-size:11px;color:#c8a96e;font-family:monospace}
+.frow{display:flex;gap:8px;margin-top:12px}
+.frow input{flex:1;padding:10px 13px;background:#111;border:1px solid #333;border-radius:8px;color:#f0ece4;font-size:13px;outline:none}
+.frow input:focus{border-color:#c8a96e}
+.frow input::placeholder{color:#444}
+.cbtn{padding:10px 20px;background:#c8a96e;color:#0d0d0d;font-size:13px;font-weight:700;border:none;border-radius:8px;cursor:pointer;white-space:nowrap}
+#cst{font-size:12px;color:#555;display:flex;align-items:center;gap:6px;margin-top:8px}
+#sdot{width:9px;height:9px;border-radius:50%;background:#333;transition:background .3s;flex-shrink:0}
+#sdot.on{background:#3fa07a}#sdot.err{background:#d44a4a}
+.skip{font-size:11px;color:#444;background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:4px}
 
-/* ── PATIENT SCREEN ── */
-#patient{
-  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-  background:var(--test-bg);transition:background .25s;
-}
+/* CALIB RULER */
+#calib{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:#fff}
+body.dark #calib{background:#0d0d0d}
+#calib.hidden{display:none}
+#ruler{height:10px;border-radius:3px}
+.c-label{font-size:14px;letter-spacing:.06em;text-align:center}
+
+/* PATIENT */
+#patient{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 #patient.hidden{display:none}
+#offline{display:none;position:fixed;top:0;left:0;right:0;background:rgba(212,74,74,.9);color:#fff;text-align:center;font-size:12px;padding:5px;z-index:50}
 
-/* Calibration ruler */
-#calib-ruler{
-  position:fixed;inset:0;background:var(--test-bg);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:20px;
-}
-#calib-ruler.hidden{display:none}
-#ruler-bar{height:12px;background:var(--test-fg);position:relative;border-radius:2px}
-#ruler-label{font-size:14px;color:var(--test-fg);letter-spacing:.06em;text-align:center}
-.ruler-tick{position:absolute;top:0;bottom:0;width:2px;background:var(--test-bg)}
+/* AV */
+#av-wrap{width:100%;text-align:center;padding:0 24px}
+#chart-line{font-family:var(--font-chart);letter-spacing:.2em;line-height:1;user-select:none;transition:all .2s}
 
-/* Chart */
-#chart-display{
-  font-family:var(--font-chart);color:var(--test-fg);
-  letter-spacing:.2em;user-select:none;text-align:center;line-height:1;
-  padding:0 24px;transition:color .25s;max-width:100vw;
-}
+/* WORTH */
+#worth-wrap{display:none;width:100%;height:100%;align-items:center;justify-content:center}
+#worth-wrap canvas{display:block}
 
-/* Worth */
-#worth-display{display:none;align-items:center;justify-content:center;width:100%;height:100%}
-#worth-display canvas{display:block}
+/* FIX */
+#fix-wrap{display:none;width:100%;height:100%;align-items:center;justify-content:center}
+#fix-wrap canvas{display:block}
 
-/* Fixation */
-#fix-display{display:none;align-items:center;justify-content:center;width:100%;height:100%}
-#fix-display canvas{display:block}
+/* PURSUIT */
+#pursuit-wrap{display:none;width:100%;height:100%;align-items:center;justify-content:center}
+#pursuit-wrap canvas{display:block}
 
-/* Pursuit */
-#pursuit-display{display:none;align-items:center;justify-content:center;width:100%;height:100%}
-#pursuit-display canvas{display:block}
+/* CONTRAST */
+#contrast-wrap{display:none;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:20px 60px}
+.ctr-row{display:flex;align-items:center;justify-content:center;width:100%}
+.ctr-letters{font-family:var(--font-chart);letter-spacing:.3em;line-height:1;text-align:center;flex:1}
 
-/* Contrast */
-#contrast-display{
-  display:none;flex-direction:column;align-items:center;justify-content:center;
-  width:100%;height:100%;gap:6px;padding:20px 60px;background:var(--test-bg);
-}
-.ctr-row{display:flex;align-items:center;justify-content:center;gap:20px;width:100%}
-.ctr-letters{font-family:var(--font-chart);font-size:57px;letter-spacing:.3em;line-height:1;text-align:center;flex:1}
+/* ROUGE/VERT */
+#rg-wrap{display:none;width:100%;height:100%;position:relative}
+#rg-left{position:absolute;left:0;top:0;width:50%;height:100%;display:flex;align-items:center;justify-content:center}
+#rg-right{position:absolute;right:0;top:0;width:50%;height:100%;display:flex;align-items:center;justify-content:center}
+#rg-line{position:absolute;left:50%;top:0;bottom:0;width:2px;background:rgba(0,0,0,.1)}
+body.dark #rg-line{background:rgba(255,255,255,.1)}
+.rg-letter{font-family:var(--font-chart);letter-spacing:.2em;line-height:1;user-select:none}
 
-/* AV label overlay (small, corner) */
-#av-overlay{
-  position:fixed;bottom:16px;right:20px;font-size:11px;color:rgba(128,128,128,0.4);
-  letter-spacing:.1em;pointer-events:none;font-family:-apple-system,sans-serif;
-}
+/* PICTOGRAMMES */
+#picto-wrap{display:none;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px}
+.picto-row{display:flex;align-items:center;justify-content:center;gap:20px}
 
-/* Connection lost */
-#offline-banner{
-  display:none;position:fixed;top:0;left:0;right:0;
-  background:rgba(212,74,74,.9);color:#fff;text-align:center;
-  font-size:12px;padding:6px;letter-spacing:.06em;z-index:50;
-}
+/* AV overlay */
+#av-overlay{position:fixed;bottom:12px;right:16px;font-size:10px;color:rgba(128,128,128,.35);letter-spacing:.1em;pointer-events:none;font-family:-apple-system,sans-serif}
 </style>
 </head>
 <body>
 
-<!-- SETUP -->
 <div id="setup">
-  <div>
-    <div class="setup-logo">Parcours Visuel</div>
-    <div class="setup-title">Écran patient — Configuration Firebase</div>
-  </div>
-
-  <div class="setup-card">
-    <h3>Créer votre projet Firebase (gratuit, 5 min)</h3>
-    <div class="step"><div class="step-n">1</div><div>Aller sur <code>console.firebase.google.com</code> → Créer un projet → désactiver Analytics → Créer</div></div>
-    <div class="step"><div class="step-n">2</div><div>Dans le menu gauche : <code>Realtime Database</code> → Créer une base de données → choisir l'Europe → Mode test (30 jours)</div></div>
-    <div class="step"><div class="step-n">3</div><div>Copier l'URL de la base (format <code>https://VOTRE-PROJET-default-rtdb.europe-west1.firebasedatabase.app</code>)</div></div>
-    <div class="step"><div class="step-n">4</div><div>Coller l'URL ci-dessous et appuyer sur Connecter</div></div>
-    <div class="field-row">
-      <input type="text" id="fb-url-input" inputmode="url" placeholder="https://mon-projet-default-rtdb.europe-west1.firebasedatabase.app" autocorrect="off" autocapitalize="none" spellcheck="false">
-      <button class="connect-btn" onclick="connectFirebase()">Connecter</button>
+  <div class="s-logo">Parcours Visuel</div>
+  <div class="s-title">Écran Patient</div>
+  <div class="s-card">
+    <h3>Connexion Firebase</h3>
+    <div class="step"><div class="sn">1</div><div>Aller sur <code>console.firebase.google.com</code> → ton projet → Realtime Database</div></div>
+    <div class="step"><div class="sn">2</div><div>Copier l'URL de la base → la coller ci-dessous</div></div>
+    <div class="step"><div class="sn">3</div><div>Règles → <code>".read":true, ".write":true</code> → Publier</div></div>
+    <div class="frow">
+      <input type="text" id="fb-url-input" placeholder="https://mon-projet-default-rtdb.europe-west1.firebasedatabase.app" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="url">
+      <button class="cbtn" onclick="connectFirebase()">Connecter</button>
     </div>
-    <div id="conn-status"><span id="status-dot"></span><span id="status-text">En attente de l'URL Firebase</span></div>
-    <button class="skip-btn" onclick="skipSetup()">Ignorer (mode démo sans télécommande)</button>
+    <div id="cst"><span id="sdot"></span><span id="stxt">En attente</span></div>
+    <button class="skip" onclick="skipSetup()">Mode démo (sans télécommande)</button>
   </div>
 </div>
 
-<!-- CALIBRATION RULER -->
-<div id="calib-ruler" class="hidden">
-  <div id="ruler-label">Règle de calibration — mesurez la barre avec un vrai mètre</div>
-  <div id="ruler-bar" style="width:200px"></div>
-  <div style="font-size:13px;color:#888;text-align:center;max-width:400px;line-height:1.6">
-    La barre fait <strong>200 px</strong>. Mesurez sa longueur en mm sur l'écran TV, puis entrez la valeur dans la télécommande pour calibrer.
-  </div>
+<div id="calib" class="hidden">
+  <div class="c-label" id="calib-label" style="color:#333">Règle de calibration — mesurez la barre sur l'écran TV</div>
+  <div id="ruler" style="width:200px;background:#111"></div>
+  <div style="font-size:12px;color:#888;text-align:center;max-width:360px;line-height:1.6">La barre fait <strong>200 px</strong>. Mesurez sa longueur réelle en mm sur la TV, entrez la valeur dans la télécommande.</div>
 </div>
 
-<!-- PATIENT DISPLAY -->
 <div id="patient" class="hidden">
-  <div id="offline-banner">Connexion perdue — en attente de reconnexion…</div>
-
-  <!-- AV -->
-  <div id="chart-display"></div>
-
-  <!-- Worth -->
-  <div id="worth-display">
-    <canvas id="worth-cnv"></canvas>
+  <div id="offline">Connexion perdue…</div>
+  <div id="av-wrap"><div id="chart-line"></div></div>
+  <div id="worth-wrap"><canvas id="worth-cnv"></canvas></div>
+  <div id="fix-wrap"><canvas id="fix-cnv"></canvas></div>
+  <div id="pursuit-wrap"><canvas id="pursuit-cnv"></canvas></div>
+  <div id="contrast-wrap"></div>
+  <div id="rg-wrap">
+    <div id="rg-left"><span class="rg-letter" id="rg-left-txt"></span></div>
+    <div id="rg-line"></div>
+    <div id="rg-right"><span class="rg-letter" id="rg-right-txt"></span></div>
   </div>
-
-  <!-- Fixation -->
-  <div id="fix-display">
-    <canvas id="fix-cnv"></canvas>
-  </div>
-
-  <!-- Pursuit -->
-  <div id="pursuit-display">
-    <canvas id="pursuit-cnv"></canvas>
-  </div>
-
-  <!-- Contrast -->
-  <div id="contrast-display" id="contrast-display"></div>
-
+  <div id="picto-wrap"></div>
   <div id="av-overlay"></div>
 </div>
 
 <script>
-/* ══════════════════════════════════════
-   FIREBASE REST API (no SDK needed)
-══════════════════════════════════════ */
-let FB_URL='';
-let pollInterval=null;
-let lastState=null;
-let ppiScale=1.0; // calibration factor
-
-// iPad Pro 12.9" base PPI = 264
-const BASE_PPI=264;
-const BASE_MM_PX=25.4/BASE_PPI;
+/* ═══ FIREBASE ═══ */
+let FB_URL='',pollInt=null,lastState=null,ppiScale=1.0;
 
 function connectFirebase(){
-  let url=document.getElementById("fb-url-input").value.trim();
-  url=url.replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\/+$/,"").trim();
-  if(url&&!url.startsWith("http"))url="https://"+url;
-  if(!url){setStatus("error");return;}
-  FB_URL=url;
-  setStatus("connecting");
-  document.getElementById("fb-url-input").value=url;
-  fetch(FB_URL+"/ping.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:Date.now()})})
-    .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
+  let url=document.getElementById('fb-url-input').value.trim();
+  url=url.replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\/+$/,'').trim();
+  if(url&&!url.startsWith('http'))url='https://'+url;
+  if(!url){setSt('err','Entrer l\'URL');return;}
+  FB_URL=url;setSt('','Connexion…');
+  document.getElementById('fb-url-input').value=url;
+  fetch(FB_URL+'/ping.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:Date.now()})})
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(()=>{
-      setStatus("connected");
-      try{localStorage.setItem("pv_fb_url",FB_URL);}catch(e){}
-      setTimeout(()=>{
-        document.getElementById("setup").classList.add("hidden");
-        document.getElementById("calib-ruler").classList.remove("hidden");
-        setTimeout(()=>{
-          document.getElementById("calib-ruler").classList.add("hidden");
-          document.getElementById("patient").classList.remove("hidden");
-          startPolling();
-          initCanvases();
-        },6000);
-      },800);
+      setSt('on','Connecté ✓');
+      try{localStorage.setItem('pv_fb_url',FB_URL);}catch(e){}
+      setTimeout(()=>goToCalib(),600);
     })
-    .catch(err=>{
-      setStatus("error");
-      document.getElementById("status-text").textContent="Échec : "+err.message;
-      console.error("FB:",err,FB_URL);
-    });
+    .catch(err=>{setSt('err','Échec: '+err.message);});
 }
-function setStatus(s){
-  const dot=document.getElementById('status-dot');
-  const txt=document.getElementById('status-text');
-  if(s==='connecting'){dot.className='';txt.textContent='Connexion…';}
-  else if(s==='connected'){dot.className='connected';txt.textContent='Connecté ✓';}
-  else if(s==='error'){dot.className='error';txt.textContent='Erreur — vérifier l\'URL Firebase';}
+function setSt(cls,msg){
+  document.getElementById('sdot').className=cls;
+  document.getElementById('stxt').textContent=msg;
 }
-
-function skipSetup(){
+function skipSetup(){goToCalib();}
+function goToCalib(){
   document.getElementById('setup').classList.add('hidden');
-  document.getElementById('calib-ruler').classList.remove('hidden');
+  const calib=document.getElementById('calib');
+  calib.classList.remove('hidden');
+  updateCalibColors();
   setTimeout(()=>{
-    document.getElementById('calib-ruler').classList.add('hidden');
+    calib.classList.add('hidden');
     document.getElementById('patient').classList.remove('hidden');
     initCanvases();
-  },4000);
+    if(FB_URL)startPolling();
+    renderAV({row:10});
+  },6000);
 }
-
+function updateCalibColors(){
+  const dark=document.body.classList.contains('dark');
+  document.getElementById('ruler').style.background=dark?'#f0ece4':'#111';
+  document.getElementById('calib-label').style.color=dark?'#f0ece4':'#333';
+  document.getElementById('calib').style.background=dark?'#0d0d0d':'#fff';
+}
 function startPolling(){
-  pollInterval=setInterval(()=>{
+  pollInt=setInterval(()=>{
     fetch(FB_URL+'/state.json')
       .then(r=>r.json())
-      .then(data=>{
-        document.getElementById('offline-banner').style.display='none';
-        if(data&&JSON.stringify(data)!==JSON.stringify(lastState)){
-          lastState=data;applyState(data);
-        }
+      .then(d=>{
+        document.getElementById('offline').style.display='none';
+        if(d&&JSON.stringify(d)!==JSON.stringify(lastState)){lastState=d;applyState(d);}
       })
-      .catch(()=>{document.getElementById('offline-banner').style.display='block';});
+      .catch(()=>{document.getElementById('offline').style.display='block';});
   },120);
 }
 
-/* ══════════════════════════════════════
-   STATE APPLICATION
-══════════════════════════════════════ */
+/* ═══ DATA ═══ */
 const ROWS=[
   {av:.05,l:"N O",hpx:907},{av:.1,l:"E H",hpx:454},{av:.2,l:"F P A",hpx:227},
   {av:.3,l:"T O Z",hpx:151},{av:.4,l:"L P E D",hpx:113},{av:.5,l:"P E C F D",hpx:91},
@@ -247,99 +187,127 @@ const ROWS=[
   {av:1.0,l:"F D P L T C E O",hpx:45},{av:1.2,l:"P E Z O L C F T D",hpx:38},
   {av:1.5,l:"D F E H O Z C T L P",hpx:30},{av:2.0,l:"F O Z P D E T L C H",hpx:23},
 ];
-function perm(str,seed){
-  const a=str.split(' ');let s=seed;
-  for(let i=a.length-1;i>0;i--){s=(s*1664525+1013904223)&0xffffffff;const j=Math.abs(s)%(i+1);[a[i],a[j]]=[a[j],a[i]];}
-  return a.join(' ');
+const LETTERS='CDEFHLNOPRSTZ';
+function rndLetters(count,seed){
+  // seeded shuffle from available optotype letters
+  let s=seed,arr=LETTERS.split(''),res=[];
+  for(let i=0;i<count;i++){
+    s=(s*1664525+1013904223)&0xffffffff;
+    const idx=Math.abs(s)%arr.length;
+    res.push(arr[idx]);
+    // remove used letter to avoid repeat on same line
+    arr.splice(idx,1);
+    if(arr.length===0)arr=LETTERS.split('');
+  }
+  return res.join(' ');
 }
-const PROWS=ROWS.map((r,i)=>({...r,d:perm(r.l,42+i*17)}));
+function fmtAV(v){return v<1?v.toFixed(2):v.toFixed(1)}
 
-let curMode='av',darkMode=false;
+/* ═══ STATE ═══ */
+let curMode='av',darkMode=false,curSeed=42;
 
 function applyState(s){
   if(s.dark!==undefined&&s.dark!==darkMode){
-    darkMode=s.dark;
-    document.body.classList.toggle('dark',darkMode);
-    redrawCurrentMode();
+    darkMode=s.dark;document.body.classList.toggle('dark',darkMode);
+    redrawCurrent();
   }
   if(s.ppi_scale!==undefined)ppiScale=s.ppi_scale;
+  if(s.seed!==undefined)curSeed=s.seed;
   if(s.mode!==undefined&&s.mode!==curMode){curMode=s.mode;showMode(s.mode);}
-  if(s.mode==='av'||curMode==='av')applyAV(s);
-  if(s.mode==='worth'||curMode==='worth')drawWorth(s);
-  if(s.mode==='fix'||curMode==='fix')drawFix(s);
-  if(s.mode==='contrast'||curMode==='contrast')applyContrast(s);
-  if(s.mode==='pursuit')handlePursuit(s);
+  // Apply per-mode state
+  if(curMode==='av')renderAV(s);
+  else if(curMode==='worth')drawWorth();
+  else if(curMode==='fix')drawFix(s);
+  else if(curMode==='pursuit')handlePursuit(s);
+  else if(curMode==='contrast')renderContrast(s);
+  else if(curMode==='rg')renderRG(s);
+  else if(curMode==='picto')renderPicto(s);
 }
 
 function showMode(m){
-  ['chart-display','worth-display','fix-display','pursuit-display','contrast-display'].forEach(id=>{
+  const ids=['av-wrap','worth-wrap','fix-wrap','pursuit-wrap','contrast-wrap','rg-wrap','picto-wrap'];
+  ids.forEach(id=>{
     const el=document.getElementById(id);
     el.style.display='none';
   });
-  if(m==='av')document.getElementById('chart-display').style.display='block';
-  else if(m==='worth'){document.getElementById('worth-display').style.display='flex';drawWorth(lastState);}
-  else if(m==='fix'){document.getElementById('fix-display').style.display='flex';drawFix(lastState);}
-  else if(m==='pursuit'){document.getElementById('pursuit-display').style.display='flex';}
-  else if(m==='contrast'){document.getElementById('contrast-display').style.display='flex';applyContrast(lastState);}
+  const map={av:'av-wrap',worth:'worth-wrap',fix:'fix-wrap',pursuit:'pursuit-wrap',contrast:'contrast-wrap',rg:'rg-wrap',picto:'picto-wrap'};
+  const el=document.getElementById(map[m]);
+  if(el){
+    el.style.display=(m==='av'||m==='rg')?'block':
+                     (m==='contrast'||m==='picto')?'flex':'flex';
+  }
+  if(m==='worth')drawWorth();
+  else if(m==='fix')drawFix(lastState||{});
+  else if(m==='pursuit'&&!pRunning)drawPursuitStatic();
+  else if(m==='contrast')renderContrast(lastState||{});
+  else if(m==='rg')renderRG(lastState||{});
+  else if(m==='picto')renderPicto(lastState||{});
 }
 
-function redrawCurrentMode(){
-  if(curMode==='worth')drawWorth(lastState);
-  else if(curMode==='fix')drawFix(lastState);
+function redrawCurrent(){
+  if(curMode==='av')renderAV(lastState||{});
+  else if(curMode==='worth')drawWorth();
+  else if(curMode==='fix')drawFix(lastState||{});
   else if(curMode==='pursuit'&&!pRunning)drawPursuitStatic();
-  else if(curMode==='contrast')applyContrast(lastState);
+  else if(curMode==='contrast')renderContrast(lastState||{});
+  else if(curMode==='rg')renderRG(lastState||{});
+  else if(curMode==='picto')renderPicto(lastState||{});
 }
 
-/* ── AV ── */
-function applyAV(s){
-  if(s.row===undefined)return;
-  const r=PROWS[s.row];
-  const el=document.getElementById('chart-display');
-  const scale=ppiScale;
+/* ═══ AV ═══ */
+function renderAV(s){
+  if(s.row===undefined&&s.seed===undefined)return;
+  const row=s.row!==undefined?s.row:10;
+  const r=ROWS[row];
+  const seed=s.seed!==undefined?s.seed:curSeed;
+  const count=r.l.split(' ').length;
+  const letters=rndLetters(count,seed+(row*31));
+  const el=document.getElementById('chart-line');
   const maxH=window.innerHeight*.90;
-  const hpx=Math.min(r.hpx*scale,maxH);
+  const hpx=Math.min(r.hpx*ppiScale,maxH);
   el.style.fontSize=hpx+'px';
-  el.style.color=darkMode?'#f0ece4':'#111111';
-  el.style.background=darkMode?'#0d0d0d':'#ffffff';
-  el.textContent=r.d;
-  document.getElementById('av-overlay').textContent='AV '+(r.av<1?r.av.toFixed(2):r.av.toFixed(1));
-  document.getElementById('patient').style.background=darkMode?'#0d0d0d':'#ffffff';
+  el.style.color=darkMode?'#f0ece4':'#111';
+  document.getElementById('patient').style.background=darkMode?'#0d0d0d':'#fff';
+  // masked mode
+  if(s.mask){
+    const arr=letters.split(' ');
+    el.innerHTML=arr.map((l,i)=>i%2===0?`<span>${l}</span>`:`<span style="opacity:0">${l}</span>`).join('<span style="letter-spacing:.2em"> </span>');
+  } else {
+    el.textContent=letters;
+  }
+  document.getElementById('av-overlay').textContent='AV '+fmtAV(r.av);
 }
 
-/* ── WORTH ── */
-function drawWorth(s){
-  if(!s)return;
+/* ═══ WORTH ═══ */
+function drawWorth(){
   const cnv=document.getElementById('worth-cnv');
   const W=window.innerWidth,H=window.innerHeight;
   cnv.width=W;cnv.height=H;
   const ctx=cnv.getContext('2d');
-  const bg=darkMode?'#0d0d0d':'#ffffff';
-  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=darkMode?'#0d0d0d':'#fff';ctx.fillRect(0,0,W,H);
   const diam=Math.min(544*ppiScale,H*.22,W*.14);const R=diam/2;
   const dist=diam*1.35;const cx=W/2,cy=H/2;
   wSpot(ctx,cx,cy-dist,'#e53935',R);
   wSpot(ctx,cx-dist,cy,'#2e7d32',R);
   wSpot(ctx,cx+dist,cy,'#2e7d32',R);
-  wSpot(ctx,cx,cy+dist,darkMode?'#cccccc':'#e0e0e0',R,darkMode?'#555':'#bbb');
+  wSpot(ctx,cx,cy+dist,darkMode?'#ccc':'#e8e8e8',R,darkMode?'#555':'#bbb');
 }
-function wSpot(ctx,x,y,fill,r,border){
-  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();
-  if(border){ctx.strokeStyle=border;ctx.lineWidth=2.5;ctx.stroke();}
+function wSpot(ctx,x,y,f,r,b){
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=f;ctx.fill();
+  if(b){ctx.strokeStyle=b;ctx.lineWidth=2;ctx.stroke();}
 }
 
-/* ── FIXATION ── */
-const FIX_SIZES={sm:54,md:109,lg:272};
+/* ═══ FIXATION ═══ */
+const FSZ={sm:54,md:109,lg:272};
 function drawFix(s){
-  if(!s)return;
   const cnv=document.getElementById('fix-cnv');
   const W=window.innerWidth,H=window.innerHeight;
   cnv.width=W;cnv.height=H;
   const ctx=cnv.getContext('2d');
-  const bg=darkMode?'#0d0d0d':'#ffffff';
-  const fg=darkMode?'#f0ece4':'#111111';
+  const bg=darkMode?'#0d0d0d':'#fff';const fg=darkMode?'#f0ece4':'#111';
   ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
   const cx=W/2,cy=H/2;
-  const sz=(FIX_SIZES[s.fix_size||'sm']||54)*ppiScale;
+  const sz=(FSZ[s.fix_size||'sm']||54)*ppiScale;
   const arm=sz/2;
   ctx.strokeStyle=fg;ctx.fillStyle=fg;ctx.lineWidth=Math.max(2,sz/18);
   const t=s.fix_target||'cross';
@@ -358,69 +326,44 @@ function drawFix(s){
   }
 }
 
-/* ── PURSUIT ── */
-let pRunning=false,pRaf=null,pX=0,pY=0,pAngle=0,pDir=1,pLastTime=null;
-let pType='h',pSpeed=272;
-
+/* ═══ POURSUITE ═══ */
+let pRunning=false,pRaf=null,pX=0,pY=0,pAngle=0,pDir=1,pLastTime=null,pType='h',pSpeed=272;
 function handlePursuit(s){
+  if(s.pursuit_type)pType=s.pursuit_type;
+  if(s.pursuit_speed)pSpeed=s.pursuit_speed*ppiScale;
   if(s.pursuit_running===true&&!pRunning){
-    pType=s.pursuit_type||'h';
-    pSpeed=(s.pursuit_speed||272)*ppiScale;
     pRunning=true;pLastTime=null;pAngle=0;pDir=1;
     pX=window.innerWidth*.08;pY=window.innerHeight/2;
-    pRaf=requestAnimationFrame(pursuitFrame);
-  } else if(s.pursuit_running===false&&pRunning){
-    stopPursuit();
+    pRaf=requestAnimationFrame(pFrame);
+  }else if(s.pursuit_running===false&&pRunning){
+    pRunning=false;cancelAnimationFrame(pRaf);pRaf=null;drawPursuitStatic();
   }
-  if(s.pursuit_type&&s.pursuit_type!==pType){pType=s.pursuit_type;}
-  if(s.pursuit_speed){pSpeed=s.pursuit_speed*ppiScale;}
-}
-function stopPursuit(){
-  pRunning=false;if(pRaf)cancelAnimationFrame(pRaf);pRaf=null;pLastTime=null;
-  drawPursuitStatic();
 }
 function drawPursuitStatic(){
   const cnv=document.getElementById('pursuit-cnv');
-  const W=window.innerWidth,H=window.innerHeight;
-  cnv.width=W;cnv.height=H;
+  cnv.width=window.innerWidth;cnv.height=window.innerHeight;
   const ctx=cnv.getContext('2d');
-  const bg=darkMode?'#0d0d0d':'#ffffff';
-  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-  drawPTarget(pX||W/2,pY||H/2,ctx);
+  ctx.fillStyle=darkMode?'#0d0d0d':'#fff';ctx.fillRect(0,0,cnv.width,cnv.height);
+  drawPTarget(pX||cnv.width/2,pY||cnv.height/2,ctx);
 }
-function pursuitFrame(ts){
+function pFrame(ts){
   if(!pRunning)return;
   if(!pLastTime)pLastTime=ts;
   const dt=Math.min((ts-pLastTime)/1000,.05);pLastTime=ts;
   const W=window.innerWidth,H=window.innerHeight;
-  const mX=W*.08,mY=H*.10,rX=W*.42,rY=H*.38;
-  if(pType==='h'){
-    pX+=pSpeed*dt*pDir;
-    if(pX>W-mX){pX=W-mX;pDir=-1;}else if(pX<mX){pX=mX;pDir=1;}
-    pY=H/2;
-  }else if(pType==='v'){
-    pY+=pSpeed*dt*pDir;
-    if(pY>H-mY){pY=H-mY;pDir=-1;}else if(pY<mY){pY=mY;pDir=1;}
-    pX=W/2;
-  }else if(pType==='circle'){
-    pAngle+=pSpeed*dt/rX;
-    pX=W/2+rX*Math.cos(pAngle);pY=H/2+rY*Math.sin(pAngle);
-  }else if(pType==='h8'){
-    pAngle+=pSpeed*dt/rX*.5;
-    const den=1+Math.sin(pAngle)**2;
-    pX=W/2+rX*Math.cos(pAngle)/den;
-    pY=H/2+rY*.55*Math.sin(pAngle)*Math.cos(pAngle)/den;
-  }
+  const mX=W*.08,mY=H*.1,rX=W*.42,rY=H*.38;
+  if(pType==='h'){pX+=pSpeed*dt*pDir;if(pX>W-mX){pX=W-mX;pDir=-1;}else if(pX<mX){pX=mX;pDir=1;}pY=H/2;}
+  else if(pType==='v'){pY+=pSpeed*dt*pDir;if(pY>H-mY){pY=H-mY;pDir=-1;}else if(pY<mY){pY=mY;pDir=1;}pX=W/2;}
+  else if(pType==='circle'){pAngle+=pSpeed*dt/rX;pX=W/2+rX*Math.cos(pAngle);pY=H/2+rY*Math.sin(pAngle);}
+  else if(pType==='h8'){pAngle+=pSpeed*dt/rX*.5;const d=1+Math.sin(pAngle)**2;pX=W/2+rX*Math.cos(pAngle)/d;pY=H/2+rY*.55*Math.sin(pAngle)*Math.cos(pAngle)/d;}
   const cnv=document.getElementById('pursuit-cnv');
   const ctx=cnv.getContext('2d');
-  const bg=darkMode?'#0d0d0d':'#ffffff';
-  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=darkMode?'#0d0d0d':'#fff';ctx.fillRect(0,0,W,H);
   drawPTarget(pX,pY,ctx);
-  pRaf=requestAnimationFrame(pursuitFrame);
+  pRaf=requestAnimationFrame(pFrame);
 }
 function drawPTarget(x,y,ctx){
-  const R=22;
-  const col=darkMode?'#c8a96e':'#d44444';
+  const R=22,col=darkMode?'#c8a96e':'#d44444';
   ctx.beginPath();ctx.arc(x,y,R,0,Math.PI*2);
   ctx.fillStyle=darkMode?'rgba(200,169,110,0.15)':'rgba(211,68,68,0.12)';ctx.fill();
   ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.stroke();
@@ -429,55 +372,95 @@ function drawPTarget(x,y,ctx){
   ctx.beginPath();ctx.moveTo(x,y-R*.65);ctx.lineTo(x,y+R*.65);ctx.stroke();
 }
 
-/* ── CONTRAST ── */
-const C_LVL=[
-  {color:'#000000',darkColor:'#f0ece4',label:'100%'},
-  {color:'#7f7f7f',darkColor:'#888888',label:'50%'},
-  {color:'#bfbfbf',darkColor:'#505050',label:'25%'},
-  {color:'#e0e0e0',darkColor:'#333333',label:'12%'},
-  {color:'#efefef',darkColor:'#1e1e1e',label:'6%'},
+/* ═══ CONTRASTE ═══ */
+const CLVL=[
+  {c:'#000',dc:'#f0ece4'},{c:'#7f7f7f',dc:'#888'},{c:'#bfbfbf',dc:'#505050'},
+  {c:'#e0e0e0',dc:'#333'},{c:'#efefef',dc:'#1e1e1e'}
 ];
-const C_LET=['H Z S','C Z S','Z R N','S D C','V K O'];
-function applyContrast(s){
-  const cd=document.getElementById('contrast-display');
-  cd.innerHTML='';
-  cd.style.background=darkMode?'#0d0d0d':'#ffffff';
-  C_LVL.forEach((lv,i)=>{
+const CLET=['H Z S','C Z S','Z R N','S D C','V K O'];
+function renderContrast(s){
+  const w=document.getElementById('contrast-wrap');
+  w.innerHTML='';w.style.background=darkMode?'#0d0d0d':'#fff';
+  const sz=(s.contrast_size||57)*ppiScale;
+  CLVL.forEach((lv,i)=>{
     const row=document.createElement('div');row.className='ctr-row';
-    const col=darkMode?lv.darkColor:lv.color;
-    row.innerHTML=`<span class="ctr-letters" style="color:${col};font-size:${57*ppiScale}px">${C_LET[i]}</span>`;
-    cd.appendChild(row);
+    const col=darkMode?lv.dc:lv.c;
+    row.innerHTML=`<span class="ctr-letters" style="color:${col};font-size:${sz}px">${CLET[i]}</span>`;
+    w.appendChild(row);
   });
 }
 
-/* ── INIT CANVASES ── */
+/* ═══ ROUGE / VERT (balance binoculaire) ═══ */
+function renderRG(s){
+  const row=s.row!==undefined?s.row:10;
+  const r=ROWS[row];
+  const seed=s.seed!==undefined?s.seed:curSeed;
+  const count=r.l.split(' ').length;
+  const half=Math.ceil(count/2);
+  const lettersL=rndLetters(half,seed+row*7);
+  const lettersR=rndLetters(half,seed+row*13+99);
+  const maxH=window.innerHeight*.70;
+  const hpx=Math.min(r.hpx*ppiScale,maxH);
+  document.getElementById('patient').style.background=darkMode?'#0d0d0d':'#fff';
+  // Left = rouge background
+  const leftEl=document.getElementById('rg-left');
+  leftEl.style.background=darkMode?'rgba(180,0,0,0.18)':'rgba(255,100,100,0.12)';
+  document.getElementById('rg-left-txt').style.fontSize=hpx+'px';
+  document.getElementById('rg-left-txt').style.color=darkMode?'#f0ece4':'#111';
+  document.getElementById('rg-left-txt').textContent=lettersL;
+  // Right = vert background
+  const rightEl=document.getElementById('rg-right');
+  rightEl.style.background=darkMode?'rgba(0,120,0,0.15)':'rgba(100,200,100,0.12)';
+  document.getElementById('rg-right-txt').style.fontSize=hpx+'px';
+  document.getElementById('rg-right-txt').style.color=darkMode?'#f0ece4':'#111';
+  document.getElementById('rg-right-txt').textContent=lettersR;
+}
+
+/* ═══ PICTOGRAMMES ═══ */
+const PICTOS={
+  maison:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100"><polygon points="50,8 92,48 8,48" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/><rect x="20" y="48" width="60" height="44" fill="none" stroke="currentColor" stroke-width="7" rx="2"/><rect x="40" y="70" width="20" height="22" fill="none" stroke="currentColor" stroke-width="6"/></svg>`,
+  arbre:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100"><polygon points="50,6 88,58 12,58" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/><polygon points="50,28 80,72 20,72" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/><rect x="43" y="72" width="14" height="18" fill="none" stroke="currentColor" stroke-width="6"/></svg>`,
+  etoile:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100"><polygon points="50,8 61,38 94,38 68,58 78,90 50,70 22,90 32,58 6,38 39,38" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/></svg>`,
+  cercle:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="8"/></svg>`,
+  carre:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100"><rect x="15" y="15" width="70" height="70" fill="none" stroke="currentColor" stroke-width="8" rx="4"/></svg>`,
+  coeur:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100"><path d="M50,80 C50,80 15,55 15,32 C15,20 25,12 35,15 C42,17 48,24 50,28 C52,24 58,17 65,15 C75,12 85,20 85,32 C85,55 50,80 50,80Z" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/></svg>`,
+  oiseau:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100"><path d="M10,40 Q30,18 50,35 Q70,18 90,40" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><circle cx="50" cy="58" r="18" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="44" cy="53" r="3" fill="currentColor"/><line x1="50" y1="58" x2="68" y2="65" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>`,
+  avion:(s)=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100"><path d="M20,50 L80,20 L75,50 L80,80 Z" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/><path d="M40,43 L20,30" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M40,57 L20,70" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>`,
+};
+const PICTO_AV=[
+  {av:.1,hpx:454},{av:.2,hpx:227},{av:.3,hpx:151},{av:.5,hpx:91},{av:.7,hpx:65},{av:1.0,hpx:45},{av:1.5,hpx:30},{av:2.0,hpx:23}
+];
+const PICTO_NAMES=Object.keys(PICTOS);
+function renderPicto(s){
+  const w=document.getElementById('picto-wrap');
+  w.innerHTML='';w.style.background=darkMode?'#0d0d0d':'#fff';
+  const color=darkMode?'#f0ece4':'#111';
+  const maxH=(window.innerHeight-40)/PICTO_AV.length-8;
+  PICTO_AV.forEach((pr,ri)=>{
+    const s2=Math.min(pr.hpx*ppiScale,maxH,120);
+    const row=document.createElement('div');row.className='picto-row';
+    PICTO_NAMES.slice(0,4).forEach(name=>{
+      const wrap=document.createElement('div');
+      wrap.style.cssText=`color:${color};display:flex;align-items:center;justify-content:center`;
+      wrap.innerHTML=PICTOS[name](s2);
+      row.appendChild(wrap);
+    });
+    w.appendChild(row);
+  });
+}
+
+/* ═══ CANVASES INIT ═══ */
 function initCanvases(){
-  // Size all canvases
   ['worth-cnv','fix-cnv','pursuit-cnv'].forEach(id=>{
-    const c=document.getElementById(id);
-    c.width=window.innerWidth;c.height=window.innerHeight;
+    const c=document.getElementById(id);c.width=window.innerWidth;c.height=window.innerHeight;
   });
-  // Default: show AV
-  showMode('av');
-  // Demo state
-  applyAV({row:10,dark:false});
-  // Draw ruler
-  const ruler=document.getElementById('ruler-bar');
-  // ruler-bar width = 200px base, shown during calib
+  showMode('av');renderAV({row:10,seed:42});
 }
 
-/* ── RESTORE SAVED URL ── */
-try{
-  const saved=localStorage.getItem('pv_fb_url');
-  if(saved){document.getElementById('fb-url-input').value=saved;}
-}catch(e){}
+/* Restore URL */
+try{const s=localStorage.getItem('pv_fb_url');if(s)document.getElementById('fb-url-input').value=s;}catch(e){}
 
-window.addEventListener('resize',()=>{
-  if(curMode==='worth')drawWorth(lastState);
-  else if(curMode==='fix')drawFix(lastState);
-  else if(curMode==='pursuit'&&!pRunning)drawPursuitStatic();
-  else if(curMode==='contrast')applyContrast(lastState);
-});
+window.addEventListener('resize',()=>{redrawCurrent();});
 </script>
 </body>
 </html>
