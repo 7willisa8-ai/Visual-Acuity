@@ -106,49 +106,35 @@ body.dark{background:#0d0d0d}
 </div>
 
 <script>
-/* ═══ SLOAN OPTOTYPES SVG ═══
-   ViewBox 0 0 10 10
-   Stroke-width = 2 (= 1/5 hauteur) — standard Sloan
-   Stroke-linecap = square, stroke-linejoin = miter
-*/
+/* ═══ SLOAN OPTOTYPES — filled paths, viewBox 0 0 50 50 ═══ */
 const SLOAN = {
-  'C': 'M8,2.5 A3.5,3.5 0 1,0 8,7.5',
-  'D': 'M2,1 L2,9 M2,1 C6,1 9,2.5 9,5 C9,7.5 6,9 2,9',
-  'E': 'M8,1 L2,1 L2,9 L8,9 M2,5 L7,5',
-  'F': 'M8,1 L2,1 L2,9 M2,5 L7,5',
-  'H': 'M2,1 L2,9 M8,1 L8,9 M2,5 L8,5',
-  'L': 'M2,1 L2,9 L8,9',
-  'N': 'M2,9 L2,1 L8,9 L8,1',
-  'O': 'M5,1 A4,4 0 1,1 5,1.001 Z',
-  'P': 'M2,9 L2,1 C6,1 9,2 9,4 C9,6 6,7 2,7',
-  'R': 'M2,9 L2,1 C6,1 9,2 9,4 C9,6 6,7 2,7 M5,7 L8.5,9',
-  'S': 'M8,2.5 C8,1 6.5,1 5,1 C2,1 2,3 5,5 C8,5 8,7 5,9 C3.5,9 2,9 2,7.5',
-  'T': 'M2,1 L8,1 M5,1 L5,9',
-  'Z': 'M2,1 L8,1 L2,9 L8,9',
-  '1': 'M4,3 L6,1 L6,9 M4,9 L8,9',
-  '2': 'M2,3 C2,1 8,1 8,3.5 C8,6 2,7 2,9 L8,9',
-  '3': 'M2,1 L8,1 L5,5 M5,5 C9,5 9,9 5,9 C3,9 2,8.5 2,8',
-  '4': 'M7,9 L7,1 L2,6 L9,6',
-  '5': 'M8,1 L2,1 L2,5 C7,4.5 9,6 8,8 C7.5,9 6,9 5,9 C3,9 2,8.5 2,8',
-  '6': 'M7.5,2 C7,1 6,1 5,1 C2,1 2,5 2,7 C2,9 3.5,9 5,9 C7,9 8,8 8,7 C8,5 7,5 5,5 C3,5 2,5.5 2,6',
-  '7': 'M2,1 L8,1 L4,9',
-  '8': 'M5,5 C2,5 2,2 5,1 C8,1 8,4 5,5 C2,5 2,8 5,9 C8,9 8,6 5,5',
-  '9': 'M8,4 C8,1 2,1 2,4 C2,7 8,7 8,4 L8,9',
+  'C': 'M44,10 C40,6 33,4 25,4 C11,4 4,13 4,25 C4,37 11,46 25,46 C33,46 40,44 44,40 L38,34 C35,37 30,39 25,39 C16,39 11,33 11,25 C11,17 16,11 25,11 C30,11 35,13 38,16 Z',
+  'D': 'M5,5 L5,45 L20,45 C40,45 45,38 45,25 C45,12 40,5 20,5 Z M12,12 L19,12 C34,12 38,17 38,25 C38,33 34,38 19,38 L12,38 Z',
+  'E': 'M5,5 L5,45 L45,45 L45,38 L12,38 L12,28 L40,28 L40,22 L12,22 L12,12 L45,12 L45,5 Z',
+  'F': 'M5,5 L5,45 L12,45 L12,28 L38,28 L38,22 L12,22 L12,12 L45,12 L45,5 Z',
+  'H': 'M5,5 L5,45 L12,45 L12,28 L38,28 L38,45 L45,45 L45,5 L38,5 L38,22 L12,22 L12,5 Z',
+  'L': 'M5,5 L5,45 L45,45 L45,38 L12,38 L12,5 Z',
+  'N': 'M5,5 L5,45 L12,45 L12,18 L38,45 L45,45 L45,5 L38,5 L38,32 L12,5 Z',
+  'O': 'M25,5 A20,20 0 1,0 25,45 A20,20 0 1,0 25,5 Z M25,12 A13,13 0 1,1 25,38 A13,13 0 1,1 25,12 Z',
+  'P': 'M5,5 L5,45 L12,45 L12,28 L33,28 C45,28 45,5 33,5 Z M12,12 L32,12 C37,12 37,21 32,21 L12,21 Z',
+  'R': 'M5,5 L5,45 L12,45 L12,28 L33,28 C45,28 45,5 33,5 Z M12,12 L32,12 C37,12 37,21 32,21 L12,21 Z M30,28 L45,45 L37,45 L23,28 Z',
+
+  'T': 'M5,5 L5,12 L21,12 L21,45 L29,45 L29,12 L45,12 L45,5 Z',
+  'Z': 'M5,5 L5,12 L34,12 L5,38 L5,45 L45,45 L45,38 L16,38 L45,12 L45,5 Z',
+  'E_R': 'M5,5 L5,45 L45,45 L45,38 L12,38 L12,28 L40,28 L40,22 L12,22 L12,12 L45,12 L45,5 Z',
+  'E_L': 'M45,5 L45,45 L5,45 L5,38 L38,38 L38,28 L10,28 L10,22 L38,22 L38,12 L5,12 L5,5 Z',
+  'E_U': 'M5,45 L45,45 L45,5 L38,5 L38,38 L28,38 L28,10 L22,10 L22,38 L12,38 L12,5 L5,5 Z',
+  'E_D': 'M5,5 L45,5 L45,45 L38,45 L38,12 L28,12 L28,40 L22,40 L22,12 L12,12 L12,45 L5,45 Z',
 };
+const E_ORIENTATIONS = ['E_R','E_L','E_U','E_D'];
+const SLOAN_LETTERS = 'CDEFHLNOPRTAZ'.split('');
 
 function makeSVG(letter, sizePx, color){
   const path = SLOAN[letter];
   if(!path) return '';
-  // stroke-width = 2/10 * sizePx = sizePx/5 (Sloan standard)
-  const sw = sizePx / 5;
-  // viewBox 0 0 10 10, with padding = sw/2 so strokes aren't clipped
-  const pad = sw / 2;
-  const vb = `${-pad} ${-pad} ${10+pad*2} ${10+pad*2}`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${sizePx}" height="${sizePx}" viewBox="${vb}">
-    <path d="${path}" fill="none" stroke="${color}" stroke-width="${sw}"
-      stroke-linecap="square" stroke-linejoin="miter"/>
-  </svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${sizePx}" height="${sizePx}" viewBox="0 0 50 50" style="display:block"><path d="${path}" fill="${color}"/></svg>`;
 }
+
 
 /* ═══ FIREBASE ═══ */
 let FB_URL='',pollInt=null,lastState=null,ppiScale=1.0;
@@ -204,8 +190,6 @@ const ROWS=[
   {av:.9,l:8,hpx:50},{av:1.0,l:8,hpx:45},{av:1.2,l:9,hpx:38},
   {av:1.5,l:10,hpx:30},{av:2.0,l:10,hpx:23},
 ];
-const SLOAN_LETTERS='CDEFHLNOPRSTZ'.split('');
-const SLOAN_DIGITS='12345679'.split('');
 
 function rndChars(arr,count,seed){
   let s=seed,pool=[...arr],res=[];
@@ -270,7 +254,7 @@ function renderAV(s){
   const r=ROWS[row];
   const seed=s.seed!==undefined?s.seed:curSeed;
   const mode=s.char_mode||charMode||'letters';
-  const pool=mode==='digits'?SLOAN_DIGITS:SLOAN_LETTERS;
+  const pool=mode==='tumbling'?E_ORIENTATIONS:SLOAN_LETTERS;
   const chars=rndChars(pool,r.l,seed+(row*31));
 
   // Selected letters (isolation mode)
