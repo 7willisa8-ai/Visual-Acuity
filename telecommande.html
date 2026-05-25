@@ -611,7 +611,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
           <div class="ctrl-row" style="margin-top:4px">
             <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);align-self:center">Optotypes :</span>
             <button class="cbtn2 active" id="cm-letters" onclick="setCharMode('letters',this)">Lettres C D E F…</button>
-            <button class="cbtn2" id="cm-digits" onclick="setCharMode('digits',this)">Chiffres 1 2 3…</button>
+            <button class="cbtn2" id="cm-tumbling" onclick="setCharMode('tumbling',this)">Tumbling E</button>
           </div>
           </div>
         </div>
@@ -790,8 +790,7 @@ const ROWS=[
 ];
 const ROW_COUNTS=[2,2,3,3,4,5,6,7,8,8,8,9,10,10];
 function fmtAV(v){return v<1?v.toFixed(2):v.toFixed(1)}
-const SLOAN_LETTERS='CDEFHLNOPRSTZ'.split('');
-const SLOAN_DIGITS='12345679'.split('');
+const SLOAN_LETTERS='CDEFHLNOPRTAZ'.split('');
 function rndLetters(count,seed,mode){
   const pool=mode==='digits'?SLOAN_DIGITS:SLOAN_LETTERS;
   let s=seed,arr=[...pool],res=[];
@@ -991,7 +990,9 @@ function updatePreview(){
   wrap.innerHTML='';
   const hasSelection=selectedLetters.size>0;
 
+  const ARROW_MAP={'E_R':'→','E_L':'←','E_U':'↑','E_D':'↓'};
   letters.forEach((l,i)=>{
+    const display=ARROW_MAP[l]||l;
     const span=document.createElement('span');
     const isSelected=selectedLetters.has(i);
     const isVisible=!hasSelection||isSelected;
@@ -1000,7 +1001,7 @@ function updatePreview(){
       span.textContent='—';
     } else {
       span.className='prev-letter'+(isSelected?' selected':'')+(hasSelection&&!isSelected?' masked':'');
-      span.textContent=isVisible?l:(hasSelection?'·':l);
+      span.textContent=isVisible?display:(hasSelection?'·':display);
     }
     span.onclick=()=>toggleLetter(i);
     wrap.appendChild(span);
@@ -1064,7 +1065,7 @@ let charMode='letters';
 function setCharMode(m,btn){
   charMode=m;
   document.getElementById('cm-letters').classList.toggle('active',m==='letters');
-  document.getElementById('cm-digits').classList.toggle('active',m==='digits');
+  document.getElementById('cm-tumbling').classList.toggle('active',m==='tumbling');
   selectedLetters=new Set();
   updatePreview();
   sendState({char_mode:m,seed:curSeed,row:curRow,selected:[]});
