@@ -15,6 +15,14 @@ body.dark{background:#0d0d0d}
 #setup.hidden{display:none}
 .s-logo{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#c8a96e}
 .s-title{font-size:18px;font-weight:700}
+.salle-picker{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px}
+.salle-lbl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#888;margin-right:4px}
+.salle-btn{width:34px;height:30px;border-radius:8px;border:1px solid rgba(128,128,128,.35);
+  background:transparent;color:#888;font-weight:800;font-size:13px;cursor:pointer}
+.salle-btn.active{background:#c8a96e;border-color:#c8a96e;color:#fff}
+#salle-tag{position:fixed;bottom:12px;left:16px;font-size:10px;font-weight:700;letter-spacing:.14em;
+  color:rgba(128,128,128,.3);pointer-events:none;font-family:-apple-system,sans-serif}
+#calib-salle{font-size:26px;font-weight:900;letter-spacing:.12em;color:#c8a96e;margin-bottom:14px}
 .s-card{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:14px;padding:22px 26px;max-width:500px;width:100%}
 .s-card h3{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c8a96e;margin-bottom:12px}
 .step{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:12px;color:#aaa;line-height:1.5}
@@ -67,6 +75,12 @@ body.dark{background:#0d0d0d}
 <div id="setup">
   <div class="s-logo">Parcours Visuel</div>
   <div class="s-title">Écran Patient</div>
+  <div class="salle-picker">
+    <span class="salle-lbl">Salle</span>
+    <button class="salle-btn" data-salle="A" onclick="switchSalle('A')">A</button>
+    <button class="salle-btn" data-salle="B" onclick="switchSalle('B')">B</button>
+    <button class="salle-btn" data-salle="C" onclick="switchSalle('C')">C</button>
+  </div>
   <div class="s-card">
     <h3>Connexion Firebase</h3>
     <div class="step"><div class="sn">1</div><div>Aller sur <code>console.firebase.google.com</code> → Realtime Database</div></div>
@@ -82,6 +96,7 @@ body.dark{background:#0d0d0d}
 </div>
 
 <div id="calib" class="hidden">
+  <div id="calib-salle"></div>
   <div class="c-label" id="calib-label">Règle de calibration — mesurez la barre sur l'écran TV</div>
   <div id="ruler"></div>
   <div style="font-size:12px;color:#888;text-align:center;max-width:360px;line-height:1.6">
@@ -103,6 +118,7 @@ body.dark{background:#0d0d0d}
   </div>
   <div id="picto-wrap"></div>
   <div id="av-overlay"></div>
+  <div id="salle-tag"></div>
 </div>
 
 <script>
@@ -136,6 +152,17 @@ function makeSVG(letter, sizePx, color){
 }
 
 
+/* ═══ SALLE (multi-box) ═══
+   Chaque box utilise son propre canal : ?salle=A / ?salle=B / ...
+   Les données sont isolées sous /salles/<CODE>/ dans Firebase.        */
+const SALLE=(new URLSearchParams(location.search).get('salle')||'A')
+  .toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,12)||'A';
+const pathState=()=>FB_URL+'/salles/'+SALLE+'/state.json';
+const pathPing =()=>FB_URL+'/salles/'+SALLE+'/ping.json';
+function switchSalle(code){
+  const u=new URL(location.href);u.searchParams.set('salle',code);location.href=u.toString();
+}
+
 /* ═══ FIREBASE ═══ */
 let FB_URL='',pollInt=null,lastState=null,ppiScale=1.0;
 
@@ -146,7 +173,7 @@ function connectFirebase(){
   if(!url){setSt('err','Entrer l\'URL');return;}
   FB_URL=url;setSt('','Connexion…');
   document.getElementById('fb-url-input').value=url;
-  fetch(FB_URL+'/ping.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:Date.now()})})
+  fetch(pathPing(),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:Date.now()})})
     .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(()=>{setSt('on','Connecté ✓');try{localStorage.setItem('pv_fb_url',FB_URL);}catch(e){}setTimeout(()=>goToCalib(),600);})
     .catch(err=>{setSt('err','Échec: '+err.message);});
@@ -172,7 +199,7 @@ function updateCalibColors(){
 }
 function startPolling(){
   pollInt=setInterval(()=>{
-    fetch(FB_URL+'/state.json')
+    fetch(pathState())
       .then(r=>r.json())
       .then(d=>{
         document.getElementById('offline').style.display='none';
@@ -488,6 +515,14 @@ function initCanvases(){
 }
 try{const s=localStorage.getItem('pv_fb_url');if(s)document.getElementById('fb-url-input').value=s;}catch(e){}
 window.addEventListener('resize',()=>redrawCurrent());
+
+/* ═══ AFFICHAGE SALLE ═══ */
+document.getElementById('salle-tag').textContent='SALLE '+SALLE;
+document.getElementById('calib-salle').textContent='SALLE '+SALLE;
+document.querySelectorAll('.salle-btn').forEach(b=>{
+  if(b.dataset.salle===SALLE)b.classList.add('active');
+});
+document.title='Écran Patient — Salle '+SALLE;
 </script>
 </body>
 </html>
