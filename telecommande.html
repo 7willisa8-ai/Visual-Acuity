@@ -346,6 +346,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 
 /* Grids */
 .fix-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2)}
+.kid-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--sp-2)}
+.kid-grid .cbtn2{width:100%;text-align:center}
+.hint{font-size:11px;color:var(--dim);line-height:1.5;flex:1;min-width:180px}
+.sublbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);width:78px;flex-shrink:0}
 .pursuit-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2)}
 .speed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2)}
 .fix-grid .cbtn2,.pursuit-grid .cbtn2,.speed-grid .cbtn2{width:100%;text-align:center}
@@ -393,6 +398,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   .avgrid{grid-template-columns:repeat(3,1fr)}
   .contrast-grid{grid-template-columns:repeat(3,1fr)}
   .fix-grid,.pursuit-grid{grid-template-columns:repeat(2,1fr)}
+  .kid-grid{grid-template-columns:repeat(3,1fr)}
   #ref-content,#test-area{padding:var(--sp-4)}
 }
 @media (prefers-reduced-motion:reduce){
@@ -660,7 +666,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
         <!-- FIXATION -->
         <div class="tpanel" id="tp-fix">
           <div class="sec-block">
-            <div class="slabel">Type de cible</div>
+            <div class="slabel">Cible géométrique</div>
             <div class="fix-grid">
               <button class="cbtn2 active" onclick="setFix('target','cross',this)">Croix</button>
               <button class="cbtn2" onclick="setFix('target','letter',this)">Lettre E</button>
@@ -668,6 +674,56 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
               <button class="cbtn2" onclick="setFix('target','ring',this)">Anneau</button>
             </div>
           </div>
+
+          <div class="sec-block">
+            <div class="slabel">Cible pédiatrique — accommodative</div>
+            <div class="kid-grid">
+              <button class="cbtn2" onclick="setFix('target','etoile',this)">Étoile</button>
+              <button class="cbtn2" onclick="setFix('target','coeur',this)">Cœur</button>
+              <button class="cbtn2" onclick="setFix('target','papillon',this)">Papillon</button>
+              <button class="cbtn2" onclick="setFix('target','fleur',this)">Fleur</button>
+              <button class="cbtn2" onclick="setFix('target','chat',this)">Chat</button>
+              <button class="cbtn2" onclick="setFix('target','ours',this)">Ours</button>
+              <button class="cbtn2" onclick="setFix('target','coccinelle',this)">Coccinelle</button>
+              <button class="cbtn2" onclick="setFix('target','poisson',this)">Poisson</button>
+              <button class="cbtn2" onclick="setFix('target','fusee',this)">Fusée</button>
+              <button class="cbtn2" onclick="setFix('target','ballon',this)">Ballon</button>
+            </div>
+            <div class="ctrl-row" style="margin-top:16px">
+              <button class="cbtn2" id="fixanim-btn" onclick="toggleFixAnim(this)">Animer la cible</button>
+              <span class="hint">Le battement capte le regard ; à couper pendant le cover test.</span>
+            </div>
+          </div>
+          <div class="sec-block">
+            <div class="slabel">Saccades — la cible sélectionnée saute d'un point à l'autre</div>
+            <div class="ctrl-row">
+              <span class="sublbl">Axe</span>
+              <button class="cbtn2 active" onclick="setSacc('axis','h',this)">Horizontal</button>
+              <button class="cbtn2" onclick="setSacc('axis','v',this)">Vertical</button>
+            </div>
+            <div class="ctrl-row" style="margin-top:10px">
+              <span class="sublbl">Amplitude</span>
+              <button class="cbtn2" onclick="setSacc('amp',1,this)">1°</button>
+              <button class="cbtn2" onclick="setSacc('amp',2,this)">2°</button>
+              <button class="cbtn2 active" onclick="setSacc('amp',3,this)">3°</button>
+              <button class="cbtn2" onclick="setSacc('amp',5,this)">5°</button>
+              <button class="cbtn2" onclick="setSacc('amp',10,this)">10°</button>
+              <button class="cbtn2" onclick="setSacc('amp',15,this)">15°</button>
+            </div>
+            <div id="sacc-info" class="hint" style="margin-top:8px"></div>
+            <div class="ctrl-row" style="margin-top:10px">
+              <span class="sublbl">Rythme</span>
+              <button class="cbtn2" onclick="setSacc('rate',0.5,this)">0,5 Hz</button>
+              <button class="cbtn2 active" onclick="setSacc('rate',1,this)">1 Hz</button>
+              <button class="cbtn2" onclick="setSacc('rate',2,this)">2 Hz</button>
+              <button class="cbtn2" onclick="setSacc('rate',0,this)">Imprévisible</button>
+            </div>
+            <div class="ctrl-row" style="margin-top:16px">
+              <button class="cbtn2 go" id="sacc-btn" onclick="toggleSacc(this)">▶ Lancer les saccades</button>
+              <span class="hint">« Imprévisible » tire au sort l'intervalle et la position, pour supprimer les saccades d'anticipation.</span>
+            </div>
+          </div>
+
           <div class="sec-block">
             <div class="slabel">Taille</div>
             <div class="ctrl-row">
@@ -781,7 +837,7 @@ function calibrate(){
 function enterApp(){
   document.getElementById('setup').classList.add('hidden');
   document.getElementById('app').classList.add('show');
-  buildAVGrid();updatePreview();startPoll();
+  buildAVGrid();updatePreview();startPoll();saccInfo();
   sendState({mode:'av',row:curRow,seed:curSeed,dark:darkMode,mask:false,rg:false});
 }
 function sendState(patch){
@@ -1070,11 +1126,40 @@ function worthAns(code,btn){
   btn.classList.add('active');sendState({worth_answer:code});
 }
 function setFix(key,val,btn){
-  btn.closest('.fix-grid,.ctrl-row').querySelectorAll('.cbtn2').forEach(b=>{
-    if(b.getAttribute('onclick')?.includes('setFix'))b.classList.remove('active');
+  document.getElementById('tp-fix').querySelectorAll('.cbtn2').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    if(oc.includes("setFix('"+key+"'"))b.classList.remove('active');
   });
   btn.classList.add('active');
   const p={};p['fix_'+key]=val;sendState(p);
+}
+let saccOn=false,saccP={axis:'h',amp:3,rate:1};
+function saccInfo(){
+  const mm=2*3000*Math.tan(saccP.amp*Math.PI/360);
+  let txt='Excursion totale sur la TV : '+(mm/10).toFixed(1)+' cm (à 3 m).';
+  if(ppiScale===1)txt+=' ⚠ TV non calibrée — l\'angle affiché est faux, fais la mesure de la barre de 200 px.';
+  document.getElementById('sacc-info').textContent=txt;
+}
+function setSacc(key,val,btn){
+  saccP[key]=val;
+  btn.closest('.ctrl-row').querySelectorAll('.cbtn2').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  saccInfo();
+  if(saccOn)sendState({fix_sacc_axis:saccP.axis,fix_sacc_amp:saccP.amp,fix_sacc_rate:saccP.rate});
+}
+function toggleSacc(btn){
+  saccOn=!saccOn;
+  btn.textContent=saccOn?'■ Arrêter les saccades':'▶ Lancer les saccades';
+  btn.className=saccOn?'cbtn2 danger':'cbtn2 go';
+  sendState({fix_sacc:saccOn,fix_sacc_axis:saccP.axis,fix_sacc_amp:saccP.amp,fix_sacc_rate:saccP.rate});
+}
+let fixAnim=false;
+function toggleFixAnim(btn){
+  fixAnim=!fixAnim;
+  if(fixAnim&&saccOn)toggleSacc(document.getElementById('sacc-btn'));
+  btn.classList.toggle('active',fixAnim);
+  btn.textContent=fixAnim?'Animation activée':'Animer la cible';
+  sendState({fix_anim:fixAnim});
 }
 function toggleTimer(){
   if(timerRunning){clearInterval(timerInt);timerRunning=false;document.getElementById('timer-btn').textContent='▶ Démarrer';document.getElementById('timer-btn').classList.remove('active');}
