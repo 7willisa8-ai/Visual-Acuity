@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Console Réfraction — Parcours Visuel</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -18,11 +18,16 @@
   --r-sm:8px;--r-md:10px;--r-lg:14px;
   --sh-1:0 1px 2px rgba(16,24,40,.07);--sh-2:0 2px 8px rgba(16,24,40,.09);
 }
-html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);
+  overflow:hidden;-webkit-text-size-adjust:100%}
+button,input{touch-action:manipulation}
 
 /* ══ SETUP ══ */
-#setup{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;
-  justify-content:center;gap:24px;padding:40px;z-index:100;flex-wrap:wrap}
+#setup{position:fixed;inset:0;background:var(--bg);z-index:100;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:40px 20px calc(40px + env(safe-area-inset-bottom))}
+#setup-inner{display:flex;align-items:center;justify-content:center;gap:24px;
+  flex-wrap:wrap;min-height:100%}
 #setup.hidden{display:none}
 .setup-logo{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
 .salle-picker{display:flex;align-items:center;gap:6px;margin-top:16px}
@@ -72,7 +77,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   font-family:monospace;box-shadow:0 1px 2px rgba(0,0,0,.1)}
 
 /* ══ APP ══ */
-#app{display:none;flex-direction:column;height:100vh}
+#app{display:none;flex-direction:column;height:100vh;height:100dvh}
 #app.show{display:flex}
 
 button{font-family:inherit}
@@ -393,13 +398,40 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   .avgrid{grid-template-columns:repeat(5,1fr)}
 }
 @media (max-width:760px){
-  #topbar{height:auto;padding:var(--sp-3) var(--sp-4);flex-wrap:wrap}
+  /* ── Setup ── */
+  #setup{padding:20px 14px calc(24px + env(safe-area-inset-bottom))}
+  #setup-inner{gap:14px}
+  .scard{padding:18px}
+  /* 16 px minimum : en dessous, iOS zoome tout seul au focus et déporte la mise en page */
+  .finput,.calib-row input{font-size:16px}
+  .calib-row{flex-direction:column}
+  .calib-row button{width:100%;padding:12px}
+  .kbd-card{display:none}
+  .setup-title{font-size:19px}
+
+  /* ── Console ── */
+  #topbar{height:auto;padding:calc(var(--sp-3) + env(safe-area-inset-top)) var(--sp-4) var(--sp-3);flex-wrap:wrap}
   #conn-area{margin-left:0;flex-wrap:wrap}
   .avgrid{grid-template-columns:repeat(3,1fr)}
   .contrast-grid{grid-template-columns:repeat(3,1fr)}
   .fix-grid,.pursuit-grid{grid-template-columns:repeat(2,1fr)}
   .kid-grid{grid-template-columns:repeat(3,1fr)}
-  #ref-content,#test-area{padding:var(--sp-4)}
+  .speed-grid{grid-template-columns:repeat(2,1fr)}
+  .act-grid{grid-template-columns:repeat(2,1fr)}
+  .abtn.span3{grid-column:span 2}
+  #ref-content{padding:var(--sp-4)}
+  #test-area{padding:var(--sp-4) var(--sp-4) calc(var(--sp-6) + env(safe-area-inset-bottom))}
+  .both-eyes{grid-template-columns:1fr}
+  .pval{font-size:30px;min-width:104px}
+  .plabel{width:34px}
+  #test-tabs{overflow-x:auto;padding:var(--sp-2) var(--sp-3);
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  #test-tabs::-webkit-scrollbar{display:none}
+  .ttab{white-space:nowrap;flex-shrink:0}
+  .sublbl{width:100%}
+  .av-lock-btn{margin-left:0;width:100%}
+  #preview-bar{flex-direction:column;align-items:flex-start;gap:var(--sp-3)}
+  #preview-meta{text-align:left}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important}
@@ -411,6 +443,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 
 <!-- ══ SETUP ══ -->
 <div id="setup">
+ <div id="setup-inner">
   <div style="display:flex;flex-direction:column;gap:14px;max-width:400px;width:100%">
     <div>
       <div class="setup-logo">Parcours Visuel</div>
@@ -458,6 +491,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
       <span class="kbd">↵</span> Valider
     </div>
   </div>
+ </div>
 </div>
 
 <!-- ══ APP ══ -->
