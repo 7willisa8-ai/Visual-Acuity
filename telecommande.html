@@ -69,6 +69,16 @@ button,input{touch-action:manipulation}
   white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .calib-row button.ok{border-color:var(--green);color:var(--green)}
 #cr{font-size:11px;color:var(--muted);margin-top:5px;text-align:center}
+.dist-ctl{display:flex;align-items:center;gap:6px}
+.dist-ctl .dlbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.dist-ctl button{width:30px;height:30px;border-radius:var(--r-sm);border:1px solid var(--border);
+  background:var(--white);color:var(--text);font-size:16px;font-weight:700;cursor:pointer;box-shadow:var(--sh-1)}
+.dist-ctl button:hover{border-color:var(--accent);color:var(--accent)}
+.dist-ctl .dval{min-width:66px;text-align:center;font-size:14px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.dist-ctl select{height:30px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--white);
+  color:var(--muted);font-size:12px;font-family:inherit;padding:0 6px;cursor:pointer}
+.dist-ctl.near .dval{color:var(--yellow)}
+.dist-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5}
 .kbd-card{background:var(--white);border:1px solid var(--border);border-radius:14px;
   padding:20px;font-size:12px;color:var(--muted);line-height:1.8;
   box-shadow:0 2px 12px rgba(0,0,0,.06)}
@@ -478,6 +488,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
         <button onclick="calibrate()" id="cal-btn">Calibrer</button>
       </div>
       <div id="cr"></div>
+      <h3 style="margin-top:18px">Distance patient ↔ TV</h3>
+      <div class="dist-ctl" data-dist-ctl></div>
+      <div class="dist-note">Les tailles des optotypes sont recalculées sur l'écran patient pour garder l'angle visuel.</div>
       <button class="cbtn" style="margin-top:12px" onclick="enterApp()">Ouvrir la console →</button>
     </div>
     <div class="kbd-card">
@@ -504,6 +517,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
     <div id="conn-area">
       <div id="led"></div>
       <span class="conn-txt" id="conn-txt">Non connecté</span>
+      <div class="dist-ctl" data-dist-ctl title="Distance patient ↔ TV"></div>
+      <div class="top-sep"></div>
       <button class="top-btn" id="bg-btn" onclick="toggleBg()">Fond blanc</button>
       <button class="top-btn" id="rg-btn" onclick="toggleRG()">Balance rouge/vert</button>
       <button class="top-btn" onclick="resetAll()">Nouvelle consultation</button>
@@ -841,6 +856,40 @@ function switchSalle(code){
 
 /* ═══ FIREBASE ═══ */
 let FB_URL='',sendQ={},sendT=null,ppiScale=1.0;
+
+/* ═══ DISTANCE DE TEST ═══
+   Envoyée à l'écran patient (state.distance_m), qui recalcule toutes les tailles
+   pour conserver l'angle visuel. Mémorisée par salle.                         */
+const DIST_MIN=0.5,DIST_MAX=8,DIST_PRESETS=[1,2,2.5,3,4,5,6];
+let distM=3;
+try{const v=parseFloat(localStorage.getItem('pv_dist_m_'+SALLE));if(!isNaN(v))distM=v;}catch(e){}
+function fmtDist(d){return d.toFixed(2).replace('.',',')+' m';}
+function setDist(d){
+  d=Math.round(Math.min(DIST_MAX,Math.max(DIST_MIN,d))*100)/100;
+  distM=d;
+  try{localStorage.setItem('pv_dist_m_'+SALLE,String(d));}catch(e){}
+  refreshDistUI();
+  sendState({distance_m:distM});
+  if(document.getElementById('sacc-info'))saccInfo();
+}
+function buildDistCtl(box){
+  box.innerHTML='<span class="dlbl">Dist.</span>'+
+    '<button type="button" onclick="setDist(distM-0.1)" aria-label="Rapprocher">−</button>'+
+    '<span class="dval" data-dist-val></span>'+
+    '<button type="button" onclick="setDist(distM+0.1)" aria-label="Éloigner">+</button>'+
+    '<select onchange="if(this.value)setDist(parseFloat(this.value));this.value=\'\'">'+
+    '<option value="">Préréglages</option>'+
+    DIST_PRESETS.map(p=>'<option value="'+p+'">'+String(p).replace('.',',')+' m</option>').join('')+
+    '</select>';
+}
+function refreshDistUI(){
+  document.querySelectorAll('[data-dist-ctl]').forEach(b=>{
+    if(!b.children.length)buildDistCtl(b);
+    b.classList.toggle('near',distM<4);
+    b.title=distM<4?'Distance < 4 m : vision de loin non strictement à l\'infini':'Distance patient ↔ TV';
+  });
+  document.querySelectorAll('[data-dist-val]').forEach(e=>e.textContent=fmtDist(distM));
+}
 function connect(){
   let url=document.getElementById('fb-url').value.trim();
   url=url.replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\/+$/,'').trim();
@@ -872,7 +921,7 @@ function enterApp(){
   document.getElementById('setup').classList.add('hidden');
   document.getElementById('app').classList.add('show');
   buildAVGrid();updatePreview();startPoll();saccInfo();
-  sendState({mode:'av',row:curRow,seed:curSeed,dark:darkMode,mask:false,rg:false});
+  sendState({mode:'av',row:curRow,seed:curSeed,dark:darkMode,mask:false,rg:false,distance_m:distM});
 }
 function sendState(patch){
   Object.assign(sendQ,patch);
@@ -1040,6 +1089,7 @@ function copyResults(){
   if(ref.OG.add!==null)txt+=` Add +${ref.OG.add.toFixed(2)}`;
   if(ref.OG.av!==null)txt+=` → AV ${fmtAV(ref.OG.av)}`;
   if(ref.OD.dp||ref.OG.dp)txt+=`\nDP: OD ${ref.OD.dp||'—'} mm / OG ${ref.OG.dp||'—'} mm`;
+  txt+=`\nAV mesurée à ${fmtDist(distM)}`+(distM<4?` (vergence résiduelle ${(-1/distM).toFixed(2)} δ)`:'');
   navigator.clipboard?.writeText(txt).then(()=>{
     const btn=event.target;const orig=btn.textContent;
     btn.textContent='Copié';setTimeout(()=>btn.textContent=orig,2000);
@@ -1169,8 +1219,8 @@ function setFix(key,val,btn){
 }
 let saccOn=false,saccP={axis:'h',amp:3,rate:1};
 function saccInfo(){
-  const mm=2*3000*Math.tan(saccP.amp*Math.PI/360);
-  let txt='Excursion totale sur la TV : '+(mm/10).toFixed(1)+' cm (à 3 m).';
+  const mm=2*distM*1000*Math.tan(saccP.amp*Math.PI/360);
+  let txt='Excursion totale sur la TV : '+(mm/10).toFixed(1)+' cm (à '+fmtDist(distM)+').';
   if(ppiScale===1)txt+=' ⚠ TV non calibrée — l\'angle affiché est faux, fais la mesure de la barre de 200 px.';
   document.getElementById('sacc-info').textContent=txt;
 }
@@ -1245,6 +1295,7 @@ document.querySelectorAll('.salle-btn').forEach(b=>{
   if(b.dataset.salle===SALLE)b.classList.add('active');
 });
 document.title='Console Bureau — Salle '+SALLE;
+refreshDistUI();
 </script>
 </body>
 </html>
