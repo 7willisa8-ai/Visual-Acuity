@@ -75,6 +75,19 @@ body.dark{background:#0d0d0d}
 .picto-row{display:flex;align-items:center;justify-content:center;gap:20px}
 #av-overlay{position:fixed;bottom:12px;right:16px;font-size:10px;color:rgba(128,128,128,.3);
   letter-spacing:.1em;pointer-events:none;font-family:-apple-system,sans-serif}
+#av-overlay.warn{color:rgba(212,74,74,.75)}
+.dist-row{display:flex;align-items:center;gap:8px;margin-top:4px}
+.dist-row button{width:40px;height:40px;border-radius:8px;border:1px solid #333;background:#111;color:#f0ece4;font-size:18px;font-weight:700;cursor:pointer}
+.dist-val{min-width:90px;text-align:center;font-size:22px;font-weight:800;color:#c8a96e;font-variant-numeric:tabular-nums}
+.dist-presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.dist-presets button{padding:6px 11px;border-radius:7px;border:1px solid #333;background:transparent;color:#aaa;font-size:12px;font-weight:700;cursor:pointer}
+.dist-presets button.active{background:#c8a96e;border-color:#c8a96e;color:#0d0d0d}
+.dist-note{font-size:11px;color:#777;line-height:1.5;margin-top:10px}
+#dist-hot{position:fixed;right:0;bottom:0;width:90px;height:90px;z-index:60}
+#dist-panel{display:none;position:fixed;right:16px;bottom:40px;z-index:70;background:#1a1a1a;color:#f0ece4;
+  border:1px solid #2e2e2e;border-radius:14px;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.4);font-family:-apple-system,sans-serif}
+#dist-panel.open{display:block}
+#dist-panel h3{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#c8a96e;margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -98,6 +111,16 @@ body.dark{background:#0d0d0d}
     </div>
     <div id="cst"><span id="sdot"></span><span id="stxt">En attente</span></div>
     <button class="skip" onclick="skipSetup()">Mode démo</button>
+  </div>
+  <div class="s-card">
+    <h3>Distance patient ↔ écran</h3>
+    <div class="dist-row">
+      <button onclick="nudgeDist(-0.1)">−</button>
+      <div class="dist-val" data-dist-val>3,00 m</div>
+      <button onclick="nudgeDist(0.1)">+</button>
+    </div>
+    <div class="dist-presets" data-dist-presets></div>
+    <div class="dist-note">Toutes les tailles (AV, pictos, contraste, rouge/vert, fixation, saccades, poursuite) sont recalculées pour garder le même angle visuel. Réglable aussi pendant l'examen : toucher le coin bas-droit de l'écran.</div>
   </div>
 </div>
 
@@ -125,6 +148,16 @@ body.dark{background:#0d0d0d}
   <div id="picto-wrap"></div>
   <div id="av-overlay"></div>
   <div id="salle-tag"></div>
+  <div id="dist-hot" onclick="toggleDistPanel()"></div>
+  <div id="dist-panel">
+    <h3>Distance</h3>
+    <div class="dist-row">
+      <button onclick="nudgeDist(-0.1)">−</button>
+      <div class="dist-val" data-dist-val>3,00 m</div>
+      <button onclick="nudgeDist(0.1)">+</button>
+    </div>
+    <div class="dist-presets" data-dist-presets></div>
+  </div>
 </div>
 
 <script>
@@ -172,6 +205,52 @@ function switchSalle(code){
 /* ═══ FIREBASE ═══ */
 let FB_URL='',pollInt=null,lastState=null,ppiScale=1.0;
 
+/* ═══ DISTANCE DE TEST ═══
+   Toutes les tailles en px de l'outil sont calculées pour 3 m (AV 1.0 = 45 px à 264 PPI).
+   À une autre distance D, la taille linéaire est multipliée par D/3 pour conserver
+   le même angle (5' d'arc pour AV 1.0).
+   Priorité : console (state.distance_m) > réglage local > ?dist= dans l'URL > 3 m. */
+const REF_DIST_M=3, DIST_MIN=0.5, DIST_MAX=8;
+const DIST_PRESETS=[1,2,2.5,3,4,5,6];
+let distM=REF_DIST_M, lastStateDist=null;
+(function(){
+  let d=parseFloat((new URLSearchParams(location.search).get('dist')||'').replace(',','.'));
+  try{const st=parseFloat(localStorage.getItem('pv_dist_m_'+SALLE));if(!isNaN(st)&&isNaN(d))d=st;}catch(e){}
+  if(!isNaN(d))distM=Math.min(DIST_MAX,Math.max(DIST_MIN,d));
+})();
+/* Facteur global : calibration écran × distance */
+function sc(){return ppiScale*distM/REF_DIST_M;}
+function fmtDist(d){return d.toFixed(2).replace('.',',')+' m';}
+function setDist(d,fromState){
+  d=Math.round(Math.min(DIST_MAX,Math.max(DIST_MIN,d))*100)/100;
+  if(d===distM){refreshDistUI();return;}
+  distM=d;
+  if(!fromState){try{localStorage.setItem('pv_dist_m_'+SALLE,String(d));}catch(e){}}
+  refreshDistUI();
+  const pt=document.getElementById('patient');
+  if(pt&&!pt.classList.contains('hidden'))redrawCurrent();
+}
+function nudgeDist(step){setDist(distM+step);}
+function refreshDistUI(){
+  document.querySelectorAll('[data-dist-val]').forEach(el=>el.textContent=fmtDist(distM));
+  document.querySelectorAll('[data-dist-presets]').forEach(box=>{
+    if(!box.children.length){
+      DIST_PRESETS.forEach(p=>{
+        const b=document.createElement('button');b.dataset.v=p;
+        b.textContent=String(p).replace('.',',')+' m';
+        b.onclick=()=>setDist(p);box.appendChild(b);
+      });
+    }
+    [...box.children].forEach(b=>b.classList.toggle('active',parseFloat(b.dataset.v)===distM));
+  });
+}
+let distPanelTimer=null;
+function toggleDistPanel(){
+  const p=document.getElementById('dist-panel');p.classList.toggle('open');
+  clearTimeout(distPanelTimer);
+  if(p.classList.contains('open'))distPanelTimer=setTimeout(()=>p.classList.remove('open'),8000);
+}
+
 function connectFirebase(){
   let url=document.getElementById('fb-url-input').value.trim();
   url=url.replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\/+$/,'').trim();
@@ -190,6 +269,7 @@ function goToCalib(){
   document.getElementById('setup').classList.add('hidden');
   const c=document.getElementById('calib');c.classList.remove('hidden');
   updateCalibColors();
+  document.getElementById('calib-salle').textContent='SALLE '+SALLE+' · '+fmtDist(distM);
   setTimeout(()=>{
     c.classList.add('hidden');
     document.getElementById('patient').classList.remove('hidden');
@@ -245,6 +325,11 @@ function applyState(s){
     darkMode=s.dark;document.body.classList.toggle('dark',darkMode);redrawCurrent();
   }
   if(s.ppi_scale!==undefined)ppiScale=s.ppi_scale;
+  /* La console ne prend la main que quand elle CHANGE la distance,
+     pour ne pas écraser un réglage local fait sur l'iPad. */
+  if(s.distance_m!==undefined&&s.distance_m!==lastStateDist){
+    lastStateDist=s.distance_m;const d=parseFloat(s.distance_m);if(!isNaN(d))setDist(d,true);
+  }
   if(s.seed!==undefined)curSeed=s.seed;
   if(s.char_mode!==undefined)charMode=s.char_mode;
   if(s.mode!==undefined&&s.mode!==curMode){curMode=s.mode;showMode(s.mode);}
@@ -302,11 +387,18 @@ function renderAV(s){
 
   // Size: calibrated hpx * ppiScale, capped to 88% viewport height
   const maxH=window.innerHeight*.88;
-  const sizePx=Math.min(r.hpx*ppiScale,maxH);
+  const wantPx=r.hpx*sc();
+  const sizePx=Math.min(wantPx,maxH);
+  const capped=wantPx>maxH;
   const color=darkMode?'#f0ece4':'#111111';
 
   // Inter-letter gap = 1 letter width (Sloan standard = 1 MAR = letter size)
-  const gap=sizePx*0.2;
+  let gap=sizePx*0.2;
+  // Si la ligne déborde en largeur, on resserre l'interlettrage (jamais la taille)
+  const availW=window.innerWidth*.96;
+  const n=displayChars.length;
+  if(n>1&&n*sizePx+(n-1)*gap>availW)gap=Math.max(0,(availW-n*sizePx)/(n-1));
+  const overflow=n*sizePx>availW;
   wrap.style.gap=gap+'px';
   wrap.style.flexWrap='nowrap';
   wrap.style.alignItems='center';
@@ -319,7 +411,15 @@ function renderAV(s){
     wrap.appendChild(div);
   });
 
-  document.getElementById('av-overlay').textContent='AV '+fmtAV(r.av)+(selected?' · isolée':'');
+  // Trait d'un optotype = 1/5 de sa hauteur : sous ~2 px, le rendu n'est plus fiable
+  const tooSmall=sizePx/5<2;
+  const ov=document.getElementById('av-overlay');
+  let warn='';
+  if(capped)warn=' · ⚠ trop grand pour l\'écran';
+  else if(tooSmall)warn=' · ⚠ trop petit (pixels)';
+  else if(overflow)warn=' · ⚠ ligne tronquée';
+  ov.textContent='AV '+fmtAV(r.av)+' · '+fmtDist(distM)+(selected?' · isolée':'')+warn;
+  ov.classList.toggle('warn',!!warn);
 }
 
 /* ═══ WORTH ═══ */
@@ -329,7 +429,7 @@ function drawWorth(){
   cnv.width=W;cnv.height=H;
   const ctx=cnv.getContext('2d');
   ctx.fillStyle=darkMode?'#0d0d0d':'#fff';ctx.fillRect(0,0,W,H);
-  const diam=Math.min(544*ppiScale,H*.22,W*.14);const R=diam/2;
+  const diam=Math.min(544*sc(),H*.22,W*.14);const R=diam/2;
   const dist=diam*1.35;const cx=W/2,cy=H/2;
   wSpot(ctx,cx,cy-dist,'#e53935',R);
   wSpot(ctx,cx-dist,cy,'#2e7d32',R);
@@ -446,13 +546,13 @@ function getKidImg(name,cb){
 const FSZ={sm:54,md:109,lg:272};
 const KID_SZ={sm:180,md:300,lg:480};
 /* Toute l'échelle de l'outil est bâtie pour 3 m (AV 1.0 = 45 px à 264 PPI). */
-const FIX_DIST_MM=3000;
+
 let fixRaf=null;
 function stopFixAnim(){if(fixRaf){cancelAnimationFrame(fixRaf);fixRaf=null;}}
 
 /* Excursion angulaire → pixels de la TV */
 function degToPx(deg){
-  const mm=2*FIX_DIST_MM*Math.tan(deg*Math.PI/360);
+  const mm=2*distM*1000*Math.tan(deg*Math.PI/360);
   return mm/25.4*264*ppiScale;
 }
 
@@ -498,7 +598,7 @@ function drawFix(s){
   const cx=W/2,cy=H/2;
   const t=s.fix_target||'cross';
   const isKid=!!KID_TARGETS[t];
-  const sz=(isKid?(KID_SZ[s.fix_size||'md']||300):(FSZ[s.fix_size||'sm']||54))*ppiScale;
+  const sz=(isKid?(KID_SZ[s.fix_size||'md']||300):(FSZ[s.fix_size||'sm']||54))*sc();
 
   /* ── SACCADES : la cible saute entre deux positions ── */
   if(s.fix_sacc){
@@ -556,7 +656,7 @@ function drawFix(s){
 let pRunning=false,pRaf=null,pX=0,pY=0,pAngle=0,pDir=1,pLastTime=null,pType='h',pSpeed=272;
 function handlePursuit(s){
   if(s.pursuit_type)pType=s.pursuit_type;
-  if(s.pursuit_speed)pSpeed=s.pursuit_speed*ppiScale;
+  if(s.pursuit_speed)pSpeed=s.pursuit_speed*sc();
   if(s.pursuit_running===true&&!pRunning){
     pRunning=true;pLastTime=null;pAngle=0;pDir=1;
     pX=window.innerWidth*.08;pY=window.innerHeight/2;
@@ -608,7 +708,7 @@ function renderContrast(s){
   const w=document.getElementById('contrast-wrap');
   w.innerHTML='';w.style.background=darkMode?'#0d0d0d':'#fff';
   w.style.gap='6px';
-  const sz=(s.contrast_size||57)*ppiScale;
+  const sz=(s.contrast_size||57)*sc();
   const maxH=(window.innerHeight-40)/5-8;
   const fs=Math.min(sz,maxH);
   CLVL.forEach((lv,i)=>{
@@ -629,7 +729,7 @@ function renderRG(s){
   const row=s.row!==undefined?s.row:10;
   const r=ROWS[row];
   const maxH=window.innerHeight*.70;
-  const sz=Math.min(r.hpx*ppiScale,maxH)*0.65;
+  const sz=Math.min(r.hpx*sc(),maxH)*0.65;
   document.getElementById('patient').style.background='#000';
   const NUMS=[['2','4'],['8'],['3','6','0']];
   const NUMS2=[['4','2'],['8'],['0','6','3']];
@@ -676,7 +776,7 @@ function renderPicto(s){
   const color=darkMode?'#f0ece4':'#111';
   const maxH=(window.innerHeight-40)/PICTO_AV.length-8;
   PICTO_AV.forEach((pr)=>{
-    const sz=Math.min(pr.hpx*ppiScale,maxH,120);
+    const sz=Math.min(pr.hpx*sc(),maxH,120);
     const row=document.createElement('div');row.className='picto-row';
     PICTO_NAMES.slice(0,4).forEach(name=>{
       const d=document.createElement('div');
@@ -700,6 +800,7 @@ window.addEventListener('resize',()=>redrawCurrent());
 /* ═══ AFFICHAGE SALLE ═══ */
 document.getElementById('salle-tag').textContent='SALLE '+SALLE;
 document.getElementById('calib-salle').textContent='SALLE '+SALLE;
+refreshDistUI();
 document.querySelectorAll('.salle-btn').forEach(b=>{
   if(b.dataset.salle===SALLE)b.classList.add('active');
 });
